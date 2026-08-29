@@ -207,3 +207,21 @@
 - **How it was verified**: Full compilation with `compile_applet`.
 - **Deviation**: None. Built exact requested scope.
 - **Follow-up**: Ready for on-device verification.
+
+## Entry 054
+- **Timestamp**: 2026-08-29T14:10:00-07:00
+- **Summary**: Removed unused com.google.gms.google-services Gradle plugin to resolve missing google-services.json CI failure in GitHub Actions APK release pipeline.
+- **Exact Files Touched**:
+  - `/app/build.gradle.kts`
+  - `/build.gradle.kts`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Removed `alias(libs.plugins.google.services)` and unused `MissingGoogleServicesStrategy` import from `/app/build.gradle.kts`.
+  2. Removed `googleServices` configuration block from `/app/build.gradle.kts`.
+  3. Removed `alias(libs.plugins.google.services) apply false` from root `/build.gradle.kts`.
+  4. Confirmed that Vian Board (100% offline, privacy-first keyboard) requires zero Google Services dependencies.
+  5. Verified successful build and assembly using `compile_applet`.
+- **How it was verified**: Full zero-error compilation with `compile_applet`.
+- **Deviation**: None.
+- **Follow-up**: Ready for export and GitHub Actions APK build.
+
