@@ -73,13 +73,13 @@ class KeyPopupOverlayView(context: Context) : View(context) {
     }
 
     private val itemTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#263238")
+        color = Color.parseColor("#000000") // Deep pure black glyphs
         textAlign = Paint.Align.CENTER
         textSize = ResourceUtils.spToPx(context, 20f)
     }
 
     private val itemSelectedTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#000000")
+        color = Color.parseColor("#000000") // Deep pure black selected glyphs
         textAlign = Paint.Align.CENTER
         textSize = ResourceUtils.spToPx(context, 22f)
     }
@@ -199,6 +199,8 @@ class KeyPopupOverlayView(context: Context) : View(context) {
             invalidate()
         }
     }
+
+    fun isShowingMoreKeys(): Boolean = moreKeysState != null
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)

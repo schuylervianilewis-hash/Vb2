@@ -51,8 +51,8 @@ object MoreKeysSpecs {
         "B" to listOf(";", "β"),
         "N" to listOf("!", "ñ", "ń", "ň"),
         "M" to listOf("?", "μ"),
-        // Comma key popup menu containing Emoji, Settings, Clipboard, Log Keeper, etc.
-        "," to listOf("😀", "⚙️", "📋", "🪵", "🌐", "🎙️", "📝"),
+        // Comma key popup menu containing Emoji, Settings, Clipboard, Language, Resize, Log Keeper
+        "," to listOf("☺", "⚙", "📋", "🌐", "⤢", "🪵"),
         "." to listOf("!", "?", ",", ";", ":", "-", "_", "@", "/", "#"),
         "?" to listOf("!", "¿", "‽"),
         "!" to listOf("?", "¡"),

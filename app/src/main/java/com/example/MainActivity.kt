@@ -73,6 +73,9 @@ class MainActivity : ComponentActivity() {
                 var showDirectLogKeeper by remember { 
                     mutableStateOf(initialDestination == "log_keeper") 
                 }
+                var showDirectAppearanceTester by remember {
+                    mutableStateOf(false)
+                }
 
                 if (showDirectLogKeeper) {
                     LogKeeperScreen(onNavigateBack = { 
@@ -81,9 +84,17 @@ class MainActivity : ComponentActivity() {
                             showOnboarding = true
                         }
                     })
+                } else if (showDirectAppearanceTester) {
+                    com.example.ui.AppearanceTesterScreen(onNavigateBack = {
+                        showDirectAppearanceTester = false
+                        if (!onboardingManager.isOnboardingCompleted()) {
+                            showOnboarding = true
+                        }
+                    })
                 } else if (showOnboarding) {
                     WelcomeOnboardingScreen(
                         onboardingManager = onboardingManager,
+                        onOpenAppearanceTester = { showDirectAppearanceTester = true },
                         onOpenSettings = { showOnboarding = false },
                         onOpenLogKeeper = { showDirectLogKeeper = true }
                     )
@@ -100,13 +111,14 @@ class MainActivity : ComponentActivity() {
 
 enum class SettingsSubPage(val title: String, val subtitle: String, val icon: ImageVector) {
     ROOT("Vian Board Settings", "", Icons.Default.Settings),
+    APPEARANCE_TESTER("Appearance & Layout Tester", "Live preview of layouts, popups & modals (AI Studio)", Icons.Default.Palette),
     GENERAL_PREFS("General Preferences", "Haptics, sound, auto-cap, spacebar glide & swipe delete", Icons.Default.Tune),
     KEYBOARD_PREFS("Layout & Appearance", "Layouts, key height, theme & number row", Icons.Default.Keyboard),
     SHORTCUTS("Text Shortcuts & Expansion", "Configure quick text expansion snippets", Icons.Default.ShortText),
-    VOICE_MODELS("Voice Input & Models", "Offline Whisper models, Silero VAD & microphone", Icons.Default.Mic),
-    SECURITY_VAULT("Security Vault (KeePass)", "Master password, credential storage & zero-clipboard fill", Icons.Default.Lock),
+    VOICE_MODELS("Voice Input (Phase 4)", "Offline Whisper models & microphone", Icons.Default.Mic),
+    SECURITY_VAULT("Security Vault (Placeholder)", "Master password, credential storage & zero-clipboard fill", Icons.Default.Lock),
     PERSONAL_VAULT("Personal Vault", "Encrypted private notes & sensitive scratchpad", Icons.Default.Security),
-    BACKUP_RESTORE("Backup & Restore", "Modular ZIP export, password-gated vault & HeliBoard import", Icons.Default.FolderZip),
+    BACKUP_RESTORE("Backup & Restore", "Modular ZIP export & HeliBoard import", Icons.Default.FolderZip),
     DIAGNOSTICS("Log Keeper", "In-memory circular log buffer & system telemetry", Icons.Default.ListAlt)
 }
 
@@ -183,6 +195,9 @@ fun MainSettingsScreen(
                         imm.showInputMethodPicker()
                     },
                     onNavigate = { currentPage = it }
+                )
+                SettingsSubPage.APPEARANCE_TESTER -> com.example.ui.AppearanceTesterScreen(
+                    onNavigateBack = { currentPage = SettingsSubPage.ROOT }
                 )
                 SettingsSubPage.GENERAL_PREFS -> GeneralSettingsScreen(
                     onNavigateBack = { currentPage = SettingsSubPage.ROOT }
@@ -261,6 +276,7 @@ fun SettingsRootList(
         }
 
         val items = listOf(
+            SettingsSubPage.APPEARANCE_TESTER,
             SettingsSubPage.GENERAL_PREFS,
             SettingsSubPage.KEYBOARD_PREFS,
             SettingsSubPage.SHORTCUTS,

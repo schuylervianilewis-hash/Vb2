@@ -15,7 +15,6 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.diagnostics.LogLevel
 import com.example.diagnostics.LogKeeper
 import com.example.diagnostics.LogTag
-import com.example.engine.core.DictionaryFacilitator
 import com.example.engine.core.SuggestedWordInfo
 import com.example.engine.core.WordComposer
 import com.example.foundation.common.Constants
@@ -27,8 +26,6 @@ import com.example.keyboard.internal.KeyboardLayoutBuilder
 import com.example.keyboard.internal.MainKeyboardView
 import com.example.keyboard.internal.PointerTracker
 import com.example.vault.ui.VaultOverlayView
-import com.example.voice.OfflineVoiceController
-import com.example.voice.ui.VoiceInputOverlayView
 
 /**
  * Main InputMethodService for Vian Board.
@@ -38,22 +35,17 @@ class VianBoardService : InputMethodService(),
     PointerTracker.KeyboardActionListener,
     SuggestionStripView.SuggestionStripListener,
     ModalOverlayManager.ModalActionListener,
-    OfflineVoiceController.VoiceSessionListener,
-    VoiceInputOverlayView.VoiceOverlayListener,
     VaultOverlayView.VaultOverlayActionListener {
 
     private lateinit var rootContainer: FrameLayout
     private lateinit var mainKeyboardView: MainKeyboardView
     private lateinit var suggestionStripView: SuggestionStripView
-    private lateinit var modalOverlayManager: ModalOverlayManager
-    private lateinit var voiceOverlayView: VoiceInputOverlayView
-    private lateinit var vaultOverlayView: VaultOverlayView
+    private var modalOverlayManager: ModalOverlayManager? = null
+    private var vaultOverlayView: VaultOverlayView? = null
 
     private val richInputConnection = RichInputConnection()
     private val wordComposer = WordComposer()
-    private val dictionaryFacilitator = DictionaryFacilitator()
     private val subtypeSwitcher = SubtypeSwitcher()
-    private lateinit var voiceController: OfflineVoiceController
     private lateinit var feedbackManager: AudioAndHapticFeedbackManager
     private lateinit var generalSettingsManager: com.example.settings.GeneralSettingsManager
     private var generalSettings = com.example.settings.GeneralSettings()
@@ -69,10 +61,6 @@ class VianBoardService : InputMethodService(),
         feedbackManager = AudioAndHapticFeedbackManager(this)
         generalSettingsManager = com.example.settings.GeneralSettingsManager(this)
         generalSettings = generalSettingsManager.load()
-        dictionaryFacilitator.resetSubtype(subtypeSwitcher.currentSubtype.subtype)
-        voiceController = OfflineVoiceController(this).apply {
-            listener = this@VianBoardService
-        }
     }
 
     override fun onCreateInputView(): View {
@@ -138,17 +126,28 @@ class VianBoardService : InputMethodService(),
         rootContainer.addView(linearContainer)
         rootContainer.addView(popupOverlay)
 
-        // 4. Modal Overlay Manager (Full height overlay)
-        modalOverlayManager = ModalOverlayManager(this).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-            listener = this@VianBoardService
-        }
-        rootContainer.addView(modalOverlayManager)
-
+        // 4. Modal Overlay Manager is created strictly on-demand to save memory
         return rootContainer
+    }
+
+    private fun getOrCreateModalOverlay(): ModalOverlayManager {
+        var manager = modalOverlayManager
+        if (manager == null) {
+            manager = ModalOverlayManager(this).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                )
+                listener = this@VianBoardService
+            }
+            modalOverlayManager = manager
+            rootContainer.addView(manager)
+        }
+        return manager
+    }
+
+    private fun dismissModalIfShowing() {
+        modalOverlayManager?.dismiss()
     }
 
     override fun onComputeInsets(outInsets: Insets) {
@@ -179,7 +178,7 @@ class VianBoardService : InputMethodService(),
         }
 
         suggestionStripView.clear()
-        modalOverlayManager.dismiss()
+        dismissModalIfShowing()
         LogKeeper.log(LogTag.IME, LogLevel.DEBUG, "onStartInputView: restarting=$restarting, inputType=${info?.inputType}")
     }
 
@@ -188,9 +187,7 @@ class VianBoardService : InputMethodService(),
         richInputConnection.setInputConnection(null)
         wordComposer.reset()
         suggestionStripView.clear()
-        if (::vaultOverlayView.isInitialized) {
-            vaultOverlayView.repository.resetAutoLockTimer()
-        }
+        vaultOverlayView?.repository?.resetAutoLockTimer()
         LogKeeper.log(LogTag.IME, LogLevel.DEBUG, "onFinishInputView: finishingInput=$finishingInput")
     }
 
@@ -210,10 +207,10 @@ class VianBoardService : InputMethodService(),
             Constants.CODE_DELETE -> handleDelete()
             Constants.CODE_SPACE -> handleSpace()
             Constants.CODE_ENTER -> handleEnter()
-            Constants.CODE_CLIPBOARD -> modalOverlayManager.showModal(ModalOverlayManager.ModalType.CLIPBOARD)
-            Constants.CODE_PROMPT_LIST -> modalOverlayManager.showModal(ModalOverlayManager.ModalType.PROMPT_LIST)
-            Constants.CODE_DESKTOP_NAV -> modalOverlayManager.showModal(ModalOverlayManager.ModalType.DESKTOP_NAV)
-            Constants.CODE_EMOJI -> modalOverlayManager.showModal(ModalOverlayManager.ModalType.EMOJI)
+            Constants.CODE_CLIPBOARD -> getOrCreateModalOverlay().showModal(ModalOverlayManager.ModalType.CLIPBOARD)
+            Constants.CODE_PROMPT_LIST -> getOrCreateModalOverlay().showModal(ModalOverlayManager.ModalType.PROMPT_LIST)
+            Constants.CODE_DESKTOP_NAV -> getOrCreateModalOverlay().showModal(ModalOverlayManager.ModalType.DESKTOP_NAV)
+            Constants.CODE_EMOJI -> getOrCreateModalOverlay().showModal(ModalOverlayManager.ModalType.EMOJI)
             Constants.CODE_VAULT -> handleVaultTrigger()
             Constants.CODE_VOICE -> handleVoiceInputTrigger()
             else -> handleCharacterKey(key)
@@ -240,7 +237,7 @@ class VianBoardService : InputMethodService(),
 
     override fun onMoreKeySelected(candidate: String) {
         when (candidate) {
-            "⚙" -> {
+            "⚙", "⚙️" -> {
                 // Settings action
                 val intent = Intent(this, com.example.MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -249,8 +246,24 @@ class VianBoardService : InputMethodService(),
                 startActivity(intent)
                 return
             }
+            "📋" -> {
+                getOrCreateModalOverlay().showModal(ModalOverlayManager.ModalType.CLIPBOARD)
+                return
+            }
+            "☺", "😀" -> {
+                getOrCreateModalOverlay().showModal(ModalOverlayManager.ModalType.EMOJI)
+                return
+            }
+            "🌐" -> {
+                val nextSubtype = subtypeSwitcher.switchToNextSubtype()
+                Toast.makeText(this, nextSubtype.displayName, Toast.LENGTH_SHORT).show()
+                return
+            }
+            "⤢", "✋" -> {
+                Toast.makeText(this, "One-Handed / Resize Mode (Phase 4)", Toast.LENGTH_SHORT).show()
+                return
+            }
             "🪵" -> {
-                // Log Keeper action (opens main activity showing diagnostics / log keeper)
                 val intent = Intent(this, com.example.MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                     putExtra("destination", "log_keeper")
@@ -267,22 +280,10 @@ class VianBoardService : InputMethodService(),
                 return
             }
             "📝" -> {
-                Toast.makeText(this, "Prompt List: Snippets & Prompts (Phase 4)", Toast.LENGTH_SHORT).show()
+                getOrCreateModalOverlay().showModal(ModalOverlayManager.ModalType.PROMPT_LIST)
                 return
             }
-            "📋" -> {
-                Toast.makeText(this, "Clipboard History: Coming in Phase 4", Toast.LENGTH_SHORT).show()
-                return
-            }
-            "✋" -> {
-                Toast.makeText(this, "One-Handed Mode: Coming in Phase 4", Toast.LENGTH_SHORT).show()
-                return
-            }
-            "😀" -> {
-                Toast.makeText(this, "Emoji Picker: Coming in Phase 4", Toast.LENGTH_SHORT).show()
-                return
-            }
-            "🎙" -> {
+            "🎙", "🎙️" -> {
                 Toast.makeText(this, "Voice Input: Coming in Phase 4", Toast.LENGTH_SHORT).show()
                 return
             }
@@ -416,18 +417,6 @@ class VianBoardService : InputMethodService(),
     }
 
     private fun handleSpace() {
-        if (!wordComposer.isEmpty) {
-            val suggestions = dictionaryFacilitator.getSuggestedWords(wordComposer)
-            val autoCorrect = suggestions.getAutoCorrectionCandidate()
-            if (autoCorrect != null && autoCorrect.isAutoCorrect) {
-                // Delete composed word before committing auto-correct
-                richInputConnection.deleteBackward(wordComposer.size)
-                richInputConnection.commitText(autoCorrect.word + " ", 1)
-                wordComposer.reset()
-                suggestionStripView.clear()
-                return
-            }
-        }
         richInputConnection.commitText(" ", 1)
         wordComposer.reset()
         suggestionStripView.clear()
@@ -480,8 +469,6 @@ class VianBoardService : InputMethodService(),
             suggestionStripView.clear()
             return
         }
-        val suggestedWords = dictionaryFacilitator.getSuggestedWords(wordComposer)
-        suggestionStripView.setSuggestions(suggestedWords)
     }
 
     // SuggestionStripView.SuggestionStripListener
@@ -515,89 +502,34 @@ class VianBoardService : InputMethodService(),
 
     override fun onPasteItem(content: String) {
         richInputConnection.commitText(content, 1)
-        modalOverlayManager.dismiss()
+        dismissModalIfShowing()
     }
 
     private fun handleVoiceInputTrigger() {
-        if (!::voiceOverlayView.isInitialized) {
-            voiceOverlayView = VoiceInputOverlayView(this).apply {
-                listener = this@VianBoardService
-            }
-        }
-        modalOverlayManager.showModal(ModalOverlayManager.ModalType.VOICE_INPUT, voiceOverlayView)
-        voiceController.startListening()
-    }
-
-    // OfflineVoiceController.VoiceSessionListener
-    override fun onListeningStarted() {
-        if (::voiceOverlayView.isInitialized) {
-            voiceOverlayView.setStatusText("Listening...")
-        }
-    }
-
-    override fun onRmsDbChanged(rmsDb: Float) {
-        if (::voiceOverlayView.isInitialized) {
-            voiceOverlayView.updateRmsDb(rmsDb)
-        }
-    }
-
-    override fun onPartialTranscription(text: String) {
-        if (::voiceOverlayView.isInitialized) {
-            voiceOverlayView.updateTranscription(text, false)
-        }
-    }
-
-    override fun onFinalTranscription(text: String) {
-        if (text.isNotEmpty()) {
-            richInputConnection.commitText(text + " ", 1)
-        }
-        if (::voiceOverlayView.isInitialized) {
-            voiceOverlayView.updateTranscription(text, true)
-        }
-        modalOverlayManager.dismiss()
-    }
-
-    override fun onError(error: String) {
-        if (::voiceOverlayView.isInitialized) {
-            voiceOverlayView.setStatusText("Voice error: $error")
-        }
-    }
-
-    override fun onListeningStopped() {
-        if (::voiceOverlayView.isInitialized) {
-            voiceOverlayView.setStatusText("Processing audio...")
-        }
-    }
-
-    // VoiceInputOverlayView.VoiceOverlayListener
-    override fun onStopListeningClicked() {
-        voiceController.stopListening()
-    }
-
-    override fun onCancelClicked() {
-        voiceController.stopListening()
-        modalOverlayManager.dismiss()
+        Toast.makeText(this, "Voice Input: Offline Engine (Phase 4)", Toast.LENGTH_SHORT).show()
     }
 
     private fun handleVaultTrigger() {
-        if (!::vaultOverlayView.isInitialized) {
-            vaultOverlayView = VaultOverlayView(this).apply {
+        var vaultOverlay = vaultOverlayView
+        if (vaultOverlay == null) {
+            vaultOverlay = VaultOverlayView(this).apply {
                 actionListener = this@VianBoardService
             }
+            vaultOverlayView = vaultOverlay
         } else {
-            vaultOverlayView.updateUiState()
+            vaultOverlay.updateUiState()
         }
-        modalOverlayManager.showModal(ModalOverlayManager.ModalType.VAULT, vaultOverlayView)
+        getOrCreateModalOverlay().showModal(ModalOverlayManager.ModalType.VAULT, vaultOverlay)
     }
 
     // VaultOverlayView.VaultOverlayActionListener
     override fun onInjectText(text: String) {
         richInputConnection.commitText(text, 1)
-        modalOverlayManager.dismiss()
+        dismissModalIfShowing()
     }
 
     override fun onDismissRequested() {
-        modalOverlayManager.dismiss()
+        dismissModalIfShowing()
     }
 
     override fun onSpaceClicked() {
@@ -614,11 +546,9 @@ class VianBoardService : InputMethodService(),
 
     override fun onDestroy() {
         super.onDestroy()
-        voiceController.stopListening()
-        if (::vaultOverlayView.isInitialized) {
-            vaultOverlayView.repository.lockVault()
-        }
-        dictionaryFacilitator.close()
+        vaultOverlayView?.repository?.lockVault()
+        modalOverlayManager = null
+        vaultOverlayView = null
         LogKeeper.log(LogTag.IME, LogLevel.INFO, "VianBoardService onDestroy")
     }
 }

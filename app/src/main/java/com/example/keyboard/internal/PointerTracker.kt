@@ -46,18 +46,28 @@ class PointerTracker(
 
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
-                initialTouchX = x
-                initialTouchY = y
+                val actionIndex = event.actionIndex
+                val touchX = event.getX(actionIndex)
+                val touchY = event.getY(actionIndex)
+
+                initialTouchX = touchX
+                initialTouchY = touchY
                 isSlidingSpace = false
                 isSwipingBackspace = false
                 isLongPressTriggered = false
                 isShowingMoreKeys = false
 
-                val key = findKey(x, y, keys)
+                // Clear any lingering pressed states across the layout
+                for (k in keys) {
+                    k.isPressed = false
+                }
+
+                val key = findKey(touchX, touchY, keys)
                 if (key != null) {
                     activeKey = key
                     key.isPressed = true
                     listener.onKeyPress(key)
+                    handler.removeCallbacks(longPressRunnable)
                     handler.postDelayed(longPressRunnable, Constants.DEFAULT_LONG_PRESS_TIMEOUT_MS)
                 }
                 return true
@@ -107,6 +117,10 @@ class PointerTracker(
                     }
                     activeKey = null
                 }
+                // Guaranteed reset of all keys to prevent stuck visual states
+                for (k in keys) {
+                    k.isPressed = false
+                }
                 isSlidingSpace = false
                 isSwipingBackspace = false
                 isShowingMoreKeys = false
@@ -118,8 +132,10 @@ class PointerTracker(
                 if (isSwipingBackspace) {
                     listener.onBackspaceSwipeRelease()
                 }
-                activeKey?.isPressed = false
                 activeKey = null
+                for (k in keys) {
+                    k.isPressed = false
+                }
                 isSlidingSpace = false
                 isSwipingBackspace = false
                 isShowingMoreKeys = false

@@ -6,12 +6,17 @@ import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DashboardCustomize
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.ListAlt
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -46,18 +51,19 @@ class OnboardingManager(context: Context) {
 }
 
 /**
- * WelcomeOnboardingScreen: One-time first-launch setup flow.
- * Steps:
- * 1. Enable Vian Board in Android System Settings
- * 2. Select Vian Board as the Active/Default Input Method
- * 3. Go to Settings
- * FAB: Quick access to Log Keeper diagnostics
+ * WelcomeOnboardingScreen: Clean, minimalist home/welcome dashboard.
+ * Contains:
+ * - IME Activation Steps
+ * - Live In-Browser Appearance & Layout Tester
+ * - Settings
+ * - Log Keeper
  */
 @Composable
 fun WelcomeOnboardingScreen(
     onboardingManager: OnboardingManager,
+    onOpenAppearanceTester: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
-    onOpenLogKeeper: () -> Unit
+    onOpenLogKeeper: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var isEnabledInSettings by remember { mutableStateOf(false) }
@@ -79,130 +85,199 @@ fun WelcomeOnboardingScreen(
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onOpenLogKeeper,
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.ListAlt,
-                        contentDescription = "Log Keeper",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                },
-                text = {
-                    Text(
-                        text = "Log Keeper",
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                },
-                containerColor = SkyBluePrimary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = RoundedCornerShape(16.dp),
-                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp)
-            )
-        }
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(24.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = 16.dp)
+            // App Header
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                border = BorderStroke(1.5.dp, SkyBlueBorder),
+                modifier = Modifier.size(72.dp)
             ) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    border = BorderStroke(1.5.dp, SkyBlueBorder),
-                    modifier = Modifier.size(76.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.Keyboard,
-                            contentDescription = null,
-                            tint = SkyBluePrimary,
-                            modifier = Modifier.size(38.dp)
-                        )
-                    }
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Keyboard,
+                        contentDescription = null,
+                        tint = SkyBluePrimary,
+                        modifier = Modifier.size(36.dp)
+                    )
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "Welcome to Vian Board",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
+                    fontSize = 22.sp,
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Ultra-lightweight, privacy-first keyboard with zero-overhead diagnostics and desktop micro-gestures.",
-                    fontSize = 14.sp,
+                    text = "Ultra-lightweight, privacy-first keyboard with zero-overhead diagnostics and modular overlays.",
+                    fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
             }
 
-            // Exactly 3 Steps Container
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Clean list of items
+            // 1. Step 1: Enable in Settings
+            OnboardingStepCard(
+                stepNumber = "1",
+                title = "Enable in System Settings",
+                subtitle = if (isEnabledInSettings) "Vian Board is enabled in system" else "Allow Vian Board in Language & Input",
+                icon = Icons.Default.Settings,
+                isCompleted = isEnabledInSettings,
+                actionButtonText = if (isEnabledInSettings) "Enabled" else "Enable",
+                onActionClick = {
+                    LogKeeper.log(LogTag.NAVIGATION, LogLevel.INFO, "User tapped: Enable in Settings")
+                    context.startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
+                }
+            )
+
+            // 2. Step 2: Select as Default Keyboard
+            OnboardingStepCard(
+                stepNumber = "2",
+                title = "Select Default Keyboard",
+                subtitle = if (isSelectedAsDefault) "Vian Board is active keyboard" else "Switch default input method to Vian Board",
+                icon = Icons.Default.Keyboard,
+                isCompleted = isSelectedAsDefault,
+                actionButtonText = if (isSelectedAsDefault) "Selected" else "Select",
+                onActionClick = {
+                    LogKeeper.log(LogTag.NAVIGATION, LogLevel.INFO, "User tapped: Select Default Keyboard")
+                    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.showInputMethodPicker()
+                }
+            )
+
+            // 3. Live Appearance & Layout Tester Item
+            WelcomeListItemCard(
+                title = "Appearance & Layout Tester",
+                subtitle = "Live in-browser preview of all layouts, popups & modals (no APK install needed)",
+                icon = Icons.Default.Palette,
+                badgeText = "Preview",
+                onClick = onOpenAppearanceTester
+            )
+
+            // 4. Settings Item
+            WelcomeListItemCard(
+                title = "Vian Board Settings",
+                subtitle = "Configure layouts, haptics, gestures, and preferences",
+                icon = Icons.Default.Settings,
+                onClick = {
+                    onboardingManager.setOnboardingCompleted(true)
+                    onOpenSettings()
+                }
+            )
+
+            // 5. Log Keeper Item
+            WelcomeListItemCard(
+                title = "Log Keeper Diagnostics",
+                subtitle = "Master On/Off switch, in-memory log buffer, and export",
+                icon = Icons.Default.ListAlt,
+                badgeText = "Audit",
+                onClick = onOpenLogKeeper
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+fun WelcomeListItemCard(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    badgeText: String? = null,
+    onClick: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, SkyBlueBorder.copy(alpha = 0.4f)),
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                border = BorderStroke(1.dp, SkyBlueBorder.copy(alpha = 0.5f)),
+                modifier = Modifier.size(40.dp)
             ) {
-                // Step 1: Enable in Settings
-                OnboardingStepCard(
-                    stepNumber = "1",
-                    title = "Enable in System Settings",
-                    subtitle = if (isEnabledInSettings) "Vian Board is enabled" else "Allow Vian Board in Language & Input",
-                    icon = Icons.Default.Settings,
-                    isCompleted = isEnabledInSettings,
-                    actionButtonText = if (isEnabledInSettings) "Enabled" else "Enable",
-                    onActionClick = {
-                        LogKeeper.log(LogTag.NAVIGATION, LogLevel.INFO, "User tapped: Enable in Settings")
-                        context.startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
-                    }
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = SkyBluePrimary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            }
 
-                // Step 2: Select as Default
-                OnboardingStepCard(
-                    stepNumber = "2",
-                    title = "Select Default Keyboard",
-                    subtitle = if (isSelectedAsDefault) "Vian Board is active keyboard" else "Switch default input method to Vian Board",
-                    icon = Icons.Default.Keyboard,
-                    isCompleted = isSelectedAsDefault,
-                    actionButtonText = if (isSelectedAsDefault) "Selected" else "Select",
-                    onActionClick = {
-                        LogKeeper.log(LogTag.NAVIGATION, LogLevel.INFO, "User tapped: Select Default Keyboard")
-                        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                        imm.showInputMethodPicker()
-                    }
-                )
+            Spacer(modifier = Modifier.width(14.dp))
 
-                // Step 3: Go to Settings
-                OnboardingStepCard(
-                    stepNumber = "3",
-                    title = "Go to Settings",
-                    subtitle = "Customize appearance, haptics, gestures, and tools",
-                    icon = Icons.Default.Settings,
-                    isCompleted = false,
-                    actionButtonText = "Settings",
-                    onActionClick = {
-                        onboardingManager.setOnboardingCompleted(true)
-                        onOpenSettings()
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = title,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    if (badgeText != null) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = SkyBluePrimary.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = badgeText,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = SkyBluePrimary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
                     }
+                }
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 16.sp
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

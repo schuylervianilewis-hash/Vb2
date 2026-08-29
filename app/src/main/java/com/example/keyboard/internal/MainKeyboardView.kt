@@ -27,6 +27,7 @@ class MainKeyboardView @JvmOverloads constructor(
 
     private val layoutBuilder = KeyboardLayoutBuilder()
     private var keys: List<Key> = emptyList()
+    val currentKeys: List<Key> get() = keys
     private var layoutMode = KeyboardLayoutBuilder.LayoutMode.ALPHA_LOWER
     private var currencySymbol = "₹"
     private var showNumberRow = true
@@ -291,19 +292,14 @@ class MainKeyboardView @JvmOverloads constructor(
 
     // PointerTracker Callbacks
     override fun onKeyPress(key: Key) {
-        if (!key.isFunctional && key.label.isNotEmpty()) {
-            popupOverlay?.showKeyPreview(key, keyboardOffsetYInRoot)
-        }
         actionListener?.onKeyPress(key)
     }
 
     override fun onKeyRelease(key: Key) {
-        popupOverlay?.dismissKeyPreview()
         actionListener?.onKeyRelease(key)
     }
 
     override fun onKeyLongPress(key: Key) {
-        popupOverlay?.dismissKeyPreview()
         if (key.code == Constants.CODE_SHIFT ||
             key.code == Constants.CODE_DELETE ||
             key.code == Constants.CODE_NUMPAD) {
@@ -318,12 +314,10 @@ class MainKeyboardView @JvmOverloads constructor(
     }
 
     override fun onSpacebarSlide(deltaX: Float) {
-        popupOverlay?.dismissKeyPreview()
         actionListener?.onSpacebarSlide(deltaX)
     }
 
     override fun onBackspaceSwipe(deltaX: Float) {
-        popupOverlay?.dismissKeyPreview()
         actionListener?.onBackspaceSwipe(deltaX)
     }
 
