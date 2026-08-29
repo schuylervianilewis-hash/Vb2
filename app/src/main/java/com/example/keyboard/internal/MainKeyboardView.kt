@@ -112,14 +112,32 @@ class MainKeyboardView @JvmOverloads constructor(
         strokeCap = Paint.Cap.ROUND
     }
 
-    // Soft rounded rectangles matching HeliBoard screenshots
-    private val keyCornerRadius = ResourceUtils.dpToPx(context, 6f)
-    private val keyMarginHorizontal = ResourceUtils.dpToPx(context, 2.5f)
-    private val keyMarginVertical = ResourceUtils.dpToPx(context, 3.5f)
+    // Soft rounded rectangles matching HeliBoard screenshots (Customizable)
+    private var keyCornerRadius = ResourceUtils.dpToPx(context, 6f)
+    private var keyMarginHorizontal = ResourceUtils.dpToPx(context, 2.5f)
+    private var keyMarginVertical = ResourceUtils.dpToPx(context, 3.5f)
+    private var keyOutlineEnabled = true
 
     init {
         setLayerType(LAYER_TYPE_HARDWARE, null)
         setBackgroundColor(Color.parseColor("#E8ECEF")) // Clean off-white HeliBoard backdrop
+    }
+
+    fun setKeyStyling(
+        cornerRadiusDp: Float,
+        horizontalGapDp: Float,
+        verticalGapDp: Float,
+        borderWidthDp: Float,
+        outlineEnabled: Boolean
+    ) {
+        this.keyCornerRadius = ResourceUtils.dpToPx(context, cornerRadiusDp)
+        this.keyMarginHorizontal = ResourceUtils.dpToPx(context, horizontalGapDp)
+        this.keyMarginVertical = ResourceUtils.dpToPx(context, verticalGapDp)
+        this.keyShadowBorderPaint.strokeWidth = ResourceUtils.dpToPx(context, borderWidthDp)
+        this.keyOutlineEnabled = outlineEnabled
+        dismissMoreKeys()
+        rebuildKeys()
+        invalidate()
     }
 
     fun setLayoutMode(mode: KeyboardLayoutBuilder.LayoutMode) {
@@ -165,6 +183,20 @@ class MainKeyboardView @JvmOverloads constructor(
         popupOverlay?.dismissMoreKeys()
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val width = MeasureSpec.getSize(widthMeasureSpec)
+        val heightMode = MeasureSpec.getMode(heightMeasureSpec)
+        val heightSize = MeasureSpec.getSize(heightMeasureSpec)
+
+        val desiredHeight = ResourceUtils.dpToPx(context, 230f).toInt()
+        val height = when (heightMode) {
+            MeasureSpec.EXACTLY -> heightSize
+            MeasureSpec.AT_MOST -> minOf(desiredHeight, heightSize)
+            else -> desiredHeight
+        }
+        setMeasuredDimension(width, height)
+    }
+
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         rebuildKeys()
@@ -198,7 +230,7 @@ class MainKeyboardView @JvmOverloads constructor(
 
             // Draw Key Soft Rounded Rectangle Background
             canvas.drawRoundRect(key.bounds, keyCornerRadius, keyCornerRadius, paint)
-            if (!isActionEnter) {
+            if (keyOutlineEnabled && !isActionEnter) {
                 canvas.drawRoundRect(key.bounds, keyCornerRadius, keyCornerRadius, keyShadowBorderPaint)
             }
 

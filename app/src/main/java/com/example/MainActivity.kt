@@ -109,17 +109,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-enum class SettingsSubPage(val title: String, val subtitle: String, val icon: ImageVector) {
-    ROOT("Vian Board Settings", "", Icons.Default.Settings),
-    APPEARANCE_TESTER("Appearance & Layout Tester", "Live preview of layouts, popups & modals (AI Studio)", Icons.Default.Palette),
-    GENERAL_PREFS("General Preferences", "Haptics, sound, auto-cap, spacebar glide & swipe delete", Icons.Default.Tune),
-    KEYBOARD_PREFS("Layout & Appearance", "Layouts, key height, theme & number row", Icons.Default.Keyboard),
-    SHORTCUTS("Text Shortcuts & Expansion", "Configure quick text expansion snippets", Icons.Default.ShortText),
-    VOICE_MODELS("Voice Input (Phase 4)", "Offline Whisper models & microphone", Icons.Default.Mic),
-    SECURITY_VAULT("Security Vault (Placeholder)", "Master password, credential storage & zero-clipboard fill", Icons.Default.Lock),
-    PERSONAL_VAULT("Personal Vault", "Encrypted private notes & sensitive scratchpad", Icons.Default.Security),
-    BACKUP_RESTORE("Backup & Restore", "Modular ZIP export & HeliBoard import", Icons.Default.FolderZip),
-    DIAGNOSTICS("Log Keeper", "In-memory circular log buffer & system telemetry", Icons.Default.ListAlt)
+enum class SettingsSubPage(val title: String, val icon: ImageVector) {
+    ROOT("Vian Board", Icons.Default.Settings),
+    APPEARANCE("Appearance & Key Styling", Icons.Default.Palette),
+    TYPING_BEHAVIOR("Typing Behavior & Rules", Icons.Default.Tune),
+    LOG_KEEPER("Log Keeper", Icons.Default.ListAlt),
+    APPEARANCE_TESTER("Appearance & Layout Tester", Icons.Default.Keyboard)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -129,14 +124,7 @@ fun MainSettingsScreen(
     onOpenLogKeeper: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val settingsManager = remember { KeyboardSettingsManager(context) }
-    val shortcutsManager = remember { CustomShortcutsManager(context) }
-    val backupManager = remember { VianBackupManager(context) }
-
     var currentPage by remember { mutableStateOf(SettingsSubPage.ROOT) }
-    var settings by remember { mutableStateOf(settingsManager.loadSettings()) }
-    var shortcuts by remember { mutableStateOf(shortcutsManager.loadShortcuts()) }
-
     var isKeyboardEnabled by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -146,7 +134,7 @@ fun MainSettingsScreen(
         isKeyboardEnabled = enabledMethods.any { it.packageName == packageName }
     }
 
-    if (currentPage == SettingsSubPage.DIAGNOSTICS) {
+    if (currentPage == SettingsSubPage.LOG_KEEPER) {
         LogKeeperScreen(onNavigateBack = { currentPage = SettingsSubPage.ROOT })
         return
     }
@@ -196,46 +184,18 @@ fun MainSettingsScreen(
                     },
                     onNavigate = { currentPage = it }
                 )
+                SettingsSubPage.APPEARANCE -> com.example.settings.AppearanceSettingsScreen(
+                    onNavigateBack = { currentPage = SettingsSubPage.ROOT }
+                )
+                SettingsSubPage.TYPING_BEHAVIOR -> com.example.settings.TypingBehaviorScreen(
+                    onNavigateBack = { currentPage = SettingsSubPage.ROOT }
+                )
+                SettingsSubPage.LOG_KEEPER -> {
+                    // Handled above
+                }
                 SettingsSubPage.APPEARANCE_TESTER -> com.example.ui.AppearanceTesterScreen(
                     onNavigateBack = { currentPage = SettingsSubPage.ROOT }
                 )
-                SettingsSubPage.GENERAL_PREFS -> GeneralSettingsScreen(
-                    onNavigateBack = { currentPage = SettingsSubPage.ROOT }
-                )
-                SettingsSubPage.KEYBOARD_PREFS -> GeneralSettingsTab(
-                    settings = settings,
-                    isKeyboardEnabled = isKeyboardEnabled,
-                    onEnableClicked = { context.startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) },
-                    onSelectClicked = {
-                        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                        imm.showInputMethodPicker()
-                    },
-                    onSettingsChanged = { updated ->
-                        settings = updated
-                        settingsManager.saveSettings(updated)
-                    }
-                )
-                SettingsSubPage.SHORTCUTS -> ShortcutsTab(
-                    configuredShortcuts = shortcuts,
-                    onShortcutsChanged = { updated ->
-                        shortcuts = updated
-                        shortcutsManager.saveShortcuts(updated)
-                    }
-                )
-                SettingsSubPage.VOICE_MODELS -> VoiceModelManagementTab()
-                SettingsSubPage.SECURITY_VAULT -> VaultSettingsTab()
-                SettingsSubPage.PERSONAL_VAULT -> PersonalVaultPlaceholderTab()
-                SettingsSubPage.BACKUP_RESTORE -> ModularBackupTab(
-                    backupManager = backupManager,
-                    onBackupRestored = {
-                        settings = settingsManager.loadSettings()
-                        shortcuts = shortcutsManager.loadShortcuts()
-                        Toast.makeText(context, "Backup restored successfully", Toast.LENGTH_SHORT).show()
-                    }
-                )
-                SettingsSubPage.DIAGNOSTICS -> {
-                    // Handled above
-                }
             }
         }
     }
@@ -251,74 +211,73 @@ fun SettingsRootList(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        // Setup card if keyboard is not active
+        // Setup banner if keyboard is not active
         if (!isKeyboardEnabled) {
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Keyboard Setup Required", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("Enable Vian Board in Android Language & Input settings to begin typing.", fontSize = 13.sp)
-                        Spacer(modifier = Modifier.height(12.dp))
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text("Keyboard Setup Required", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = onEnableClicked) { Text("1. Enable") }
-                            OutlinedButton(onClick = onSelectClicked) { Text("2. Select") }
+                            Button(
+                                onClick = onEnableClicked,
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                            ) { Text("1. Enable", fontSize = 12.sp) }
+                            OutlinedButton(
+                                onClick = onSelectClicked,
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                            ) { Text("2. Select", fontSize = 12.sp) }
                         }
                     }
                 }
+                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
             }
         }
 
         val items = listOf(
-            SettingsSubPage.APPEARANCE_TESTER,
-            SettingsSubPage.GENERAL_PREFS,
-            SettingsSubPage.KEYBOARD_PREFS,
-            SettingsSubPage.SHORTCUTS,
-            SettingsSubPage.VOICE_MODELS,
-            SettingsSubPage.SECURITY_VAULT,
-            SettingsSubPage.PERSONAL_VAULT,
-            SettingsSubPage.BACKUP_RESTORE,
-            SettingsSubPage.DIAGNOSTICS
+            SettingsSubPage.APPEARANCE,
+            SettingsSubPage.TYPING_BEHAVIOR,
+            SettingsSubPage.LOG_KEEPER,
+            SettingsSubPage.APPEARANCE_TESTER
         )
 
         items(items) { item ->
-            Card(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onNavigate(item) },
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable { onNavigate(item) }
+                    .padding(vertical = 14.dp, horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        item.icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(item.title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                        Text(item.subtitle, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
+                Icon(
+                    item.icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(14.dp))
+                Text(
+                    item.title,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.size(18.dp)
+                )
             }
+            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
         }
     }
 }

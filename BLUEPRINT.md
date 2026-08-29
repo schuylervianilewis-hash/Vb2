@@ -146,10 +146,10 @@
 | Phase | Description | Status |
 | :--- | :--- | :--- |
 | **Phase 1** | HeliBoard Preferences Infrastructure, Vectors & Datasets | COMPLETED |
-| **Phase 2A** | Lightweight Canvas Main Keyboard Layouts (QWERTY with Row 0 & Sub-labels, Symbols 1 & 2, Numpad) | COMPLETED |
+| **Phase 2A** | Lightweight Canvas Main Keyboard Layouts (QWERTY with Row 0 & Sub-labels, Symbols 1 & 2, Numpad, Input Adaptation) | COMPLETED |
 | **Phase 2B** | Top Toolbar 3 States (Suggestions, Tools with Go Right Up/Down, Active Chip) & Pinned Actions | PLANNED |
-| **Phase 2C** | Key Preview Bubble & MoreKeys 2-Row Popup (Floating Over Toolbar) + Gestures | PLANNED |
+| **Phase 2C** | Key Preview Bubble & MoreKeys 2-Row Popup (Floating Over Toolbar) + Gestures | COMPLETED |
 | **Phase 2D** | Clipboard Manager Modal (Top Navigation + 2-Column Pinned Grid + 4 Bottom Buttons) | PLANNED |
-| **Phase 2E** | Emoji & Kaomoji Picker Modal (10 Category Tabs + Grid + 4 Bottom Buttons) | PLANNED |
+| **Phase 2E** | Emoji & Kaomoji Picker Modal (10 Category Tabs + Grid + 4 Bottom Buttons: ABC, Space, Backspace, Enter) | COMPLETED |
 | **Phase 2F** | Interaction Matrix (Long-press Shortcuts, 5-Min Incognito, Comma Menu, Placeholders) | PLANNED |
 | **Phase 2G** | One-Handed Mode Docking & Zero-Resource Idle Stub Integration | PLANNED |

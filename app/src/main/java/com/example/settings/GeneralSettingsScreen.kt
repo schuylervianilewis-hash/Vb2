@@ -209,6 +209,185 @@ fun GeneralSettingsScreen(
                     )
                 }
             }
+
+            // Section 4: Key Appearance & Button Styling
+            SettingsSectionHeader(title = "Key Appearance & Button Styling")
+
+            SettingsCard {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    // Corner Radius (Roundness)
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Key Corner Roundness",
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "${settings.keyCornerRadiusDp.toInt()} dp",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = SkyBluePrimary
+                            )
+                        }
+                        Text(
+                            text = if (settings.keyCornerRadiusDp <= 1f) "Sharp rectangular (0dp)" else if (settings.keyCornerRadiusDp >= 14f) "Pill-shaped / Fully rounded" else "Rounded corners",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Slider(
+                            value = settings.keyCornerRadiusDp,
+                            onValueChange = { updateSettings(settings.copy(keyCornerRadiusDp = it)) },
+                            valueRange = 0f..16f,
+                            steps = 15,
+                            colors = SliderDefaults.colors(
+                                thumbColor = SkyBluePrimary,
+                                activeTrackColor = SkyBluePrimary
+                            )
+                        )
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+                    // Horizontal Gap (Spacing)
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Horizontal Key Spacing",
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = String.format(java.util.Locale.US, "%.1f dp", settings.keyHorizontalGapDp),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = SkyBluePrimary
+                            )
+                        }
+                        Text(
+                            text = "Gap between horizontal adjacent keys",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Slider(
+                            value = settings.keyHorizontalGapDp,
+                            onValueChange = { updateSettings(settings.copy(keyHorizontalGapDp = it)) },
+                            valueRange = 0f..8f,
+                            steps = 15,
+                            colors = SliderDefaults.colors(
+                                thumbColor = SkyBluePrimary,
+                                activeTrackColor = SkyBluePrimary
+                            )
+                        )
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+                    // Vertical Gap (Spacing)
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Vertical Key Spacing",
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = String.format(java.util.Locale.US, "%.1f dp", settings.keyVerticalGapDp),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = SkyBluePrimary
+                            )
+                        }
+                        Text(
+                            text = "Gap between vertical keyboard rows",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Slider(
+                            value = settings.keyVerticalGapDp,
+                            onValueChange = { updateSettings(settings.copy(keyVerticalGapDp = it)) },
+                            valueRange = 0f..8f,
+                            steps = 15,
+                            colors = SliderDefaults.colors(
+                                thumbColor = SkyBluePrimary,
+                                activeTrackColor = SkyBluePrimary
+                            )
+                        )
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+                    // Key Border Outline
+                    SettingsToggleRow(
+                        title = "Key Outline Border",
+                        subtitle = "Draw subtle contrast outline border around keycaps",
+                        icon = Icons.Default.BorderColor,
+                        checked = settings.keyOutlineEnabled,
+                        onCheckedChange = { updateSettings(settings.copy(keyOutlineEnabled = it)) }
+                    )
+
+                    if (settings.keyOutlineEnabled) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Border Width",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = String.format(java.util.Locale.US, "%.2f dp", settings.keyBorderWidthDp),
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = SkyBluePrimary
+                                )
+                            }
+                            Slider(
+                                value = settings.keyBorderWidthDp,
+                                onValueChange = { updateSettings(settings.copy(keyBorderWidthDp = it)) },
+                                valueRange = 0.25f..2.5f,
+                                steps = 8,
+                                colors = SliderDefaults.colors(
+                                    thumbColor = SkyBluePrimary,
+                                    activeTrackColor = SkyBluePrimary
+                                )
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+                    // Reset button styling to HeliBoard defaults
+                    OutlinedButton(
+                        onClick = {
+                            updateSettings(
+                                settings.copy(
+                                    keyCornerRadiusDp = 6f,
+                                    keyHorizontalGapDp = 2.5f,
+                                    keyVerticalGapDp = 3.5f,
+                                    keyBorderWidthDp = 0.75f,
+                                    keyOutlineEnabled = true
+                                )
+                            )
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Reset Button Style to Default", color = SkyBluePrimary)
+                    }
+                }
+            }
         }
     }
 }

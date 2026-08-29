@@ -120,6 +120,13 @@ class VianBoardService : InputMethodService(),
             actionListener = this@VianBoardService
             this.popupOverlay = popupOverlay
             this.keyboardOffsetYInRoot = stripHeight.toFloat()
+            setKeyStyling(
+                cornerRadiusDp = generalSettings.keyCornerRadiusDp,
+                horizontalGapDp = generalSettings.keyHorizontalGapDp,
+                verticalGapDp = generalSettings.keyVerticalGapDp,
+                borderWidthDp = generalSettings.keyBorderWidthDp,
+                outlineEnabled = generalSettings.keyOutlineEnabled
+            )
         }
         linearContainer.addView(mainKeyboardView)
 
@@ -165,16 +172,36 @@ class VianBoardService : InputMethodService(),
         super.onStartInputView(info, restarting)
         if (::generalSettingsManager.isInitialized) {
             generalSettings = generalSettingsManager.load()
+            if (::mainKeyboardView.isInitialized) {
+                mainKeyboardView.setKeyStyling(
+                    cornerRadiusDp = generalSettings.keyCornerRadiusDp,
+                    horizontalGapDp = generalSettings.keyHorizontalGapDp,
+                    verticalGapDp = generalSettings.keyVerticalGapDp,
+                    borderWidthDp = generalSettings.keyBorderWidthDp,
+                    outlineEnabled = generalSettings.keyOutlineEnabled
+                )
+            }
         }
         richInputConnection.setInputConnection(currentInputConnection)
         wordComposer.reset()
         currentShiftState = Constants.SHIFT_OFF
 
         val inputClass = info?.inputType?.and(android.text.InputType.TYPE_MASK_CLASS)
-        if (inputClass == android.text.InputType.TYPE_CLASS_NUMBER || inputClass == android.text.InputType.TYPE_CLASS_PHONE) {
-            mainKeyboardView.setLayoutMode(KeyboardLayoutBuilder.LayoutMode.NUMBER_PAD)
-        } else {
-            mainKeyboardView.setLayoutMode(KeyboardLayoutBuilder.LayoutMode.ALPHA_LOWER)
+        val inputVariation = info?.inputType?.and(android.text.InputType.TYPE_MASK_VARIATION)
+        val imeAction = info?.imeOptions?.and(EditorInfo.IME_MASK_ACTION)
+
+        // Adapt layout to target input field
+        when {
+            inputClass == android.text.InputType.TYPE_CLASS_PHONE -> {
+                mainKeyboardView.setLayoutMode(KeyboardLayoutBuilder.LayoutMode.NUMBER_PAD)
+            }
+            inputClass == android.text.InputType.TYPE_CLASS_NUMBER ||
+            inputClass == android.text.InputType.TYPE_CLASS_DATETIME -> {
+                mainKeyboardView.setLayoutMode(KeyboardLayoutBuilder.LayoutMode.NUMBER_PAD)
+            }
+            else -> {
+                mainKeyboardView.setLayoutMode(KeyboardLayoutBuilder.LayoutMode.ALPHA_LOWER)
+            }
         }
 
         suggestionStripView.clear()

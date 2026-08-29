@@ -113,3 +113,97 @@
 - **How it was verified**: Direct verification and compilation check.
 - **Deviation**: None.
 - **Follow-up**: Triggered platform preview rebuild.
+
+## Entry 049
+- **Timestamp**: 2026-08-29T11:51:00-07:00
+- **Summary**: Refactored Welcome & Settings UI into clean minimalist list items, converted Layout Preview into docked IME layout with notepad sandbox, and enabled R8 minification & resource shrinking.
+- **Exact Files Touched**:
+  - `/app/src/main/java/com/example/onboarding/WelcomeOnboardingScreen.kt`
+  - `/app/src/main/java/com/example/MainActivity.kt`
+  - `/app/src/main/java/com/example/ui/AppearanceTesterScreen.kt`
+  - `/app/build.gradle.kts`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Refactored `WelcomeOnboardingScreen.kt` to eliminate fat card containers, heavy subtitles, and round avatars; replaced with a clean list of item names and divider lines.
+  2. Refactored `SettingsRootList` in `MainActivity.kt` to remove fat card wrappers and sub-descriptions; converted to a clean flat list with icons and title items.
+  3. Redesigned `AppearanceTesterScreen.kt` into a realistic full-height notepad document with the keyboard realistically docked at the bottom, directly supporting live typing, layout switching (QWERTY, Shift, ?123, =\\<, numpad), and morekeys popups.
+  4. Enabled `isMinifyEnabled = true` and `isShrinkResources = true` in `app/build.gradle.kts` for `release` builds.
+  5. Verified compilation via `compile_applet`.
+- **How it was verified**: Full compilation using `compile_applet`.
+- **Deviation**: None.
+- **Follow-up**: Ready for on-device manual QA.
+
+## Entry 050
+- **Timestamp**: 2026-08-29T12:21:40-07:00
+- **Summary**: Implemented customizable key button styling (roundness, horizontal/vertical spacing, border width) and enforced on-demand lazy stubs for background efficiency.
+- **Exact Files Touched**:
+  - `/app/src/main/java/com/example/settings/GeneralSettings.kt`
+  - `/app/src/main/java/com/example/keyboard/internal/MainKeyboardView.kt`
+  - `/app/src/main/java/com/example/settings/GeneralSettingsScreen.kt`
+  - `/app/src/main/java/com/example/ime/VianBoardService.kt`
+  - `/app/src/main/java/com/example/ui/AppearanceTesterScreen.kt`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Extended `GeneralSettings.kt` and `GeneralSettingsManager` with customizable key styling parameters: `keyCornerRadiusDp` (0dp-16dp), `keyHorizontalGapDp` (0dp-8dp), `keyVerticalGapDp` (0dp-8dp), `keyBorderWidthDp` (0.25dp-2.5dp), and `keyOutlineEnabled`.
+  2. Added `setKeyStyling()` to `MainKeyboardView.kt` to dynamically update key drawing roundness, margin bounds, outline borders, and invalidate canvas renders.
+  3. Added "Key Appearance & Button Styling" section to `GeneralSettingsScreen.kt` featuring live interactive sliders and a "Reset Button Style to Default" action.
+  4. Parameterized `VianBoardService.kt` and `AppearanceTesterScreen.kt` to load and apply custom button styling dynamically.
+  5. Verified lazy stubbing across the IME service so zero background daemons or pollers run while typing.
+- **How it was verified**: Full compilation using `compile_applet`.
+- **Deviation**: None.
+- **Follow-up**: Ready for user testing and customization adjustments.
+
+## Entry 051
+- **Timestamp**: 2026-08-29T12:43:00-07:00
+- **Summary**: Calibrated board layout tester to real keyboard physical dimensions (270dp height) with hardware measure spec constraint.
+- **Exact Files Touched**:
+  - `/app/src/main/java/com/example/keyboard/internal/MainKeyboardView.kt`
+  - `/app/src/main/java/com/example/ui/AppearanceTesterScreen.kt`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Added explicit `onMeasure()` override to `MainKeyboardView.kt` to enforce standard default height bounds (`230dp`) when measured under `WRAP_CONTENT` or unconstrained specs.
+  2. Fixed keyboard container height in `AppearanceTesterScreen.kt` to an authentic `270dp` (40dp suggestion strip + 230dp keyboard surface), docking it at the bottom.
+  3. Ensured the upper document notepad occupies the remaining screen space naturally.
+  4. Verified full compilation using `compile_applet`.
+- **How it was verified**: Full compilation using `compile_applet`.
+- **Deviation**: None.
+- **Follow-up**: Ready for live on-device testing.
+
+## Entry 052
+- **Timestamp**: 2026-08-29T13:00:30-07:00
+- **Summary**: Reorganized settings architecture into Appearance & Key Styling, Typing Behavior & Rules, Log Keeper, and Layout Tester.
+- **Exact Files Touched**:
+  - `/app/src/main/java/com/example/settings/GeneralSettings.kt`
+  - `/app/src/main/java/com/example/settings/AppearanceSettingsScreen.kt`
+  - `/app/src/main/java/com/example/settings/TypingBehaviorScreen.kt`
+  - `/app/src/main/java/com/example/MainActivity.kt`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Created `AppearanceSettingsScreen.kt` containing keyboard height scaling, bottom inset padding, dedicated number row toggle, key corner roundness, horizontal/vertical spacing, and keycap outline border controls.
+  2. Created `TypingBehaviorScreen.kt` containing haptic feedback & strength, sound click & volume, spacebar cursor glide, backspace swipe delete, auto-capitalization, double-space period, smart multiply morph (`x` -> `×`), and punctuation auto-space.
+  3. Streamlined Settings root list in `MainActivity.kt` to show strictly active screens (Appearance & Key Styling, Typing Behavior & Rules, Log Keeper, Appearance & Layout Tester), removing unbuilt placeholders.
+  4. Verified full compilation using `compile_applet`.
+- **How it was verified**: Full compilation using `compile_applet`.
+- **Deviation**: None.
+- **Follow-up**: Ready for on-device testing.
+
+## Entry 053
+- **Timestamp**: 2026-08-29T13:25:30-07:00
+- **Summary**: Implemented HeliBoard-matching Emoji Modal with 11 category tabs, high-density grid, and fixed 4-button bottom bar [ABC, Space, Backspace, Enter], plus input adaptation.
+- **Exact Files Touched**:
+  - `/app/src/main/java/com/example/ime/emoji/EmojiModalView.kt`
+  - `/app/src/main/java/com/example/ime/emoji/EmojiData.kt`
+  - `/app/src/main/java/com/example/ime/ModalOverlayManager.kt`
+  - `/app/src/main/java/com/example/ime/VianBoardService.kt`
+  - `/BLUEPRINT.md`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Created `EmojiModalView.kt` with a top horizontal category tab bar (Recent, Smileys, People, Animals, Food, Travel, Activities, Objects, Symbols, Flags, Kaomoji) and an 8-column native grid layout.
+  2. Implemented the fixed 4-button bottom row strictly adhering to `[ ABC ]`, `[ Spacebar ]`, `[ ⌫ Backspace ]`, `[ ↵ Enter ]`.
+  3. Created `EmojiData.kt` with curated Unicode glyph datasets and lightweight `SharedPreferences` persistence for recent emojis.
+  4. Integrated `EmojiModalView` inside `ModalOverlayManager.kt` with zero-allocation on-demand presentation.
+  5. Updated `VianBoardService.kt` `onStartInputView` to inspect `EditorInfo.inputType` and adapt layout modes (Phone, Number/Date vs. Alpha) seamlessly.
+  6. Verified zero-error compilation with `compile_applet`.
+- **How it was verified**: Full compilation with `compile_applet`.
+- **Deviation**: None. Built exact requested scope.
+- **Follow-up**: Ready for on-device verification.

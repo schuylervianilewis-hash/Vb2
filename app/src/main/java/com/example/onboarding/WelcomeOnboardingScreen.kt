@@ -4,16 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.DashboardCustomize
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material.icons.filled.Palette
@@ -25,13 +23,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diagnostics.LogKeeper
 import com.example.diagnostics.LogLevel
 import com.example.diagnostics.LogTag
-import com.example.ui.theme.SkyBlueBorder
 import com.example.ui.theme.SkyBluePrimary
 
 /**
@@ -51,12 +47,8 @@ class OnboardingManager(context: Context) {
 }
 
 /**
- * WelcomeOnboardingScreen: Clean, minimalist home/welcome dashboard.
- * Contains:
- * - IME Activation Steps
- * - Live In-Browser Appearance & Layout Tester
- * - Settings
- * - Log Keeper
+ * WelcomeOnboardingScreen: Ultra-lightweight, clean, minimalist menu list.
+ * Stripped of fat cards and verbose descriptions.
  */
 @Composable
 fun WelcomeOnboardingScreen(
@@ -92,69 +84,38 @@ fun WelcomeOnboardingScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 16.dp, vertical = 20.dp)
         ) {
-            // App Header
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                border = BorderStroke(1.5.dp, SkyBlueBorder),
-                modifier = Modifier.size(72.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.Keyboard,
-                        contentDescription = null,
-                        tint = SkyBluePrimary,
-                        modifier = Modifier.size(36.dp)
-                    )
-                }
-            }
+            // Minimalist Header
+            Text(
+                text = "Vian Board",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = MaterialTheme.colorScheme.onBackground
+            )
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "Welcome to Vian Board",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Ultra-lightweight, privacy-first keyboard with zero-overhead diagnostics and modular overlays.",
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
-            }
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Clean list of items
-            // 1. Step 1: Enable in Settings
-            OnboardingStepCard(
-                stepNumber = "1",
+            // 1. Enable in Settings
+            SimpleSetupRow(
                 title = "Enable in System Settings",
-                subtitle = if (isEnabledInSettings) "Vian Board is enabled in system" else "Allow Vian Board in Language & Input",
                 icon = Icons.Default.Settings,
                 isCompleted = isEnabledInSettings,
-                actionButtonText = if (isEnabledInSettings) "Enabled" else "Enable",
+                actionText = if (isEnabledInSettings) "Enabled" else "Enable",
                 onActionClick = {
                     LogKeeper.log(LogTag.NAVIGATION, LogLevel.INFO, "User tapped: Enable in Settings")
                     context.startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
                 }
             )
 
-            // 2. Step 2: Select as Default Keyboard
-            OnboardingStepCard(
-                stepNumber = "2",
+            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+
+            // 2. Select Default
+            SimpleSetupRow(
                 title = "Select Default Keyboard",
-                subtitle = if (isSelectedAsDefault) "Vian Board is active keyboard" else "Switch default input method to Vian Board",
                 icon = Icons.Default.Keyboard,
                 isCompleted = isSelectedAsDefault,
-                actionButtonText = if (isSelectedAsDefault) "Selected" else "Select",
+                actionText = if (isSelectedAsDefault) "Selected" else "Select",
                 onActionClick = {
                     LogKeeper.log(LogTag.NAVIGATION, LogLevel.INFO, "User tapped: Select Default Keyboard")
                     val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -162,19 +123,20 @@ fun WelcomeOnboardingScreen(
                 }
             )
 
-            // 3. Live Appearance & Layout Tester Item
-            WelcomeListItemCard(
+            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+
+            // 3. Layout Tester
+            SimpleNavRow(
                 title = "Appearance & Layout Tester",
-                subtitle = "Live in-browser preview of all layouts, popups & modals (no APK install needed)",
                 icon = Icons.Default.Palette,
-                badgeText = "Preview",
                 onClick = onOpenAppearanceTester
             )
 
-            // 4. Settings Item
-            WelcomeListItemCard(
-                title = "Vian Board Settings",
-                subtitle = "Configure layouts, haptics, gestures, and preferences",
+            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+
+            // 4. Settings
+            SimpleNavRow(
+                title = "Settings",
                 icon = Icons.Default.Settings,
                 onClick = {
                     onboardingManager.setOnboardingCompleted(true)
@@ -182,194 +144,100 @@ fun WelcomeOnboardingScreen(
                 }
             )
 
-            // 5. Log Keeper Item
-            WelcomeListItemCard(
-                title = "Log Keeper Diagnostics",
-                subtitle = "Master On/Off switch, in-memory log buffer, and export",
+            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+
+            // 5. Log Keeper
+            SimpleNavRow(
+                title = "Log Keeper",
                 icon = Icons.Default.ListAlt,
-                badgeText = "Audit",
                 onClick = onOpenLogKeeper
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
 @Composable
-fun WelcomeListItemCard(
+fun SimpleNavRow(
     title: String,
-    subtitle: String,
     icon: ImageVector,
-    badgeText: String? = null,
     onClick: () -> Unit
 ) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        border = BorderStroke(1.dp, SkyBlueBorder.copy(alpha = 0.4f)),
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 14.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                border = BorderStroke(1.dp, SkyBlueBorder.copy(alpha = 0.5f)),
-                modifier = Modifier.size(40.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = SkyBluePrimary,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = title,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    if (badgeText != null) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = SkyBluePrimary.copy(alpha = 0.15f)
-                        ) {
-                            Text(
-                                text = badgeText,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = SkyBluePrimary,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = subtitle,
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 16.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                modifier = Modifier.size(20.dp)
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = SkyBluePrimary,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(14.dp))
+        Text(
+            text = title,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 
 @Composable
-fun OnboardingStepCard(
-    stepNumber: String,
+fun SimpleSetupRow(
     title: String,
-    subtitle: String,
     icon: ImageVector,
     isCompleted: Boolean,
-    actionButtonText: String,
+    actionText: String,
     onActionClick: () -> Unit
 ) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isCompleted) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f) else MaterialTheme.colorScheme.surface
-        ),
-        border = BorderStroke(1.dp, if (isCompleted) SkyBlueBorder else SkyBlueBorder.copy(alpha = 0.35f)),
-        modifier = Modifier.fillMaxWidth()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = if (isCompleted) SkyBluePrimary else MaterialTheme.colorScheme.surfaceVariant,
-                border = BorderStroke(1.dp, if (isCompleted) SkyBluePrimary else SkyBlueBorder.copy(alpha = 0.5f)),
-                modifier = Modifier.size(36.dp)
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (isCompleted) SkyBluePrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(14.dp))
+        Text(
+            text = title,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        if (isCompleted) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = null,
+                tint = SkyBluePrimary,
+                modifier = Modifier.size(18.dp).padding(end = 4.dp)
+            )
+        } else {
+            Button(
+                onClick = onActionClick,
+                shape = RoundedCornerShape(6.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = SkyBluePrimary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    if (isCompleted) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    } else {
-                        Text(
-                            text = stepNumber,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            color = SkyBluePrimary
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = subtitle,
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            if (isCompleted) {
-                OutlinedButton(
-                    onClick = onActionClick,
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, SkyBlueBorder),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text(actionButtonText, fontSize = 13.sp, color = SkyBluePrimary)
-                }
-            } else {
-                Button(
-                    onClick = onActionClick,
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = SkyBluePrimary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-                ) {
-                    Text(actionButtonText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                }
+                Text(actionText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
         }
     }
