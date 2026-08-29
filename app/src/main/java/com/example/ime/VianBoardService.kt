@@ -22,6 +22,7 @@ import com.example.foundation.common.Constants
 import com.example.foundation.utils.DeviceUtils
 import com.example.foundation.utils.ResourceUtils
 import com.example.keyboard.internal.Key
+import com.example.keyboard.internal.KeyPopupOverlayView
 import com.example.keyboard.internal.KeyboardLayoutBuilder
 import com.example.keyboard.internal.MainKeyboardView
 import com.example.keyboard.internal.PointerTracker
@@ -81,7 +82,7 @@ class VianBoardService : InputMethodService(),
 
         // Solid canvas backdrop
         rootContainer = FrameLayout(this).apply {
-            setBackgroundColor(Color.parseColor("#F1F5F9"))
+            setBackgroundColor(Color.parseColor("#E8ECEF"))
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
@@ -90,7 +91,7 @@ class VianBoardService : InputMethodService(),
 
         val linearContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#F1F5F9"))
+            setBackgroundColor(Color.parseColor("#E8ECEF"))
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 totalHeight
@@ -104,11 +105,6 @@ class VianBoardService : InputMethodService(),
             insets
         }
 
-        // Set navigation bar color for seamless IME edge-to-edge backdrop
-        try {
-            window?.window?.navigationBarColor = Color.parseColor("#F1F5F9")
-        } catch (_: Exception) {}
-
         // 1. Suggestion Strip View (Top 40dp)
         suggestionStripView = SuggestionStripView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
@@ -119,19 +115,30 @@ class VianBoardService : InputMethodService(),
         }
         linearContainer.addView(suggestionStripView)
 
-        // 2. Main Hardware Canvas Keyboard View
+        // 2. Key Popup Overlay View (Floating Key Preview & MoreKeys 2-Row Popups)
+        val popupOverlay = KeyPopupOverlayView(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                totalHeight
+            )
+        }
+
+        // 3. Main Hardware Canvas Keyboard View
         mainKeyboardView = MainKeyboardView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 keyboardHeight
             )
             actionListener = this@VianBoardService
+            this.popupOverlay = popupOverlay
+            this.keyboardOffsetYInRoot = stripHeight.toFloat()
         }
         linearContainer.addView(mainKeyboardView)
 
         rootContainer.addView(linearContainer)
+        rootContainer.addView(popupOverlay)
 
-        // 3. Modal Overlay Manager (Full height overlay)
+        // 4. Modal Overlay Manager (Full height overlay)
         modalOverlayManager = ModalOverlayManager(this).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,

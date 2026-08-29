@@ -18,27 +18,28 @@
 - **Deviation**: None.
 - **Follow-up**: Ready for implementation phase approval.
 
-## Entry 042
-- **Timestamp**: 2026-08-28T13:59:15-07:00
-- **Summary**: Implemented Main Keyboard Canvas UI, exact screenshot geometry, dual sub-labels, and crisp white pill keycaps.
+## Entry 043
+- **Timestamp**: 2026-08-28T15:08:30-07:00
+- **Summary**: Implemented authentic HeliBoard neutral theme, soft rectangular keycaps, floating KeyPopupOverlayView over toolbar, and expanded multi-row comma & key popup grids.
 - **Exact Files Touched**:
-  - `/app/src/main/java/com/example/keyboard/internal/KeyboardLayoutBuilder.kt`
+  - `/app/src/main/java/com/example/keyboard/internal/KeyPopupOverlayView.kt`
   - `/app/src/main/java/com/example/keyboard/internal/MainKeyboardView.kt`
   - `/app/src/main/java/com/example/ime/data/MoreKeysSpecs.kt`
+  - `/app/src/main/java/com/example/ime/SuggestionStripView.kt`
   - `/app/src/main/java/com/example/ime/VianBoardService.kt`
   - `/receipts/RECEIPTS_002.md`
 - **What was actually done**:
-  1. Updated `KeyboardLayoutBuilder.kt` to generate exact geometry:
-     - Row 0: `1¹ 2² 3³ 4⁴ 5⁵ 6⁶ 7⁷ 8⁸ 9⁹ 0⁰`
-     - Row 1: `Q% W/ E| R= T[ Y] U* I! O- P;`
-     - Row 2: `A@ S# D₹ F_ G& H- J+ K( L)`
-     - Row 3: `[ ⇧ ] Z* X" C' V: B; N! M? [ ⌫ ]`
-     - Row 4: `[ ?123 ] [ , … ] [ Spacebar … ] [ . ] [ ↵ ]`
-  2. Modernized `MainKeyboardView.kt` with pure white pill keycaps (`#FFFFFF`), Slate-900 primary labels (`#0F172A`), Slate-500 secondary corner sub-labels (`#64748B`), soft Slate-Blue functional keys (`#E2E8F0`), vector icon rendering (`ic_ime_shift`, `ic_ime_backspace`, `ic_ime_enter`), and 2-row Sky Blue popup accents.
-  3. Expanded `MoreKeysSpecs.kt` with 2-row popup grids for all alphanumeric keys.
-  4. Updated `VianBoardService.kt` with clean `#F1F5F9` slate-100 edge-to-edge backdrop.
-  5. Verified compilation via `compile_applet`.
+  1. Created `KeyPopupOverlayView.kt` anchored directly to the root `FrameLayout`. Key previews and 2-row MoreKeys popups for Row 0 and Row 1 now float freely above the keyboard frame and seamlessly overlap the top suggestion strip/toolbar without clipping or finger occlusion.
+  2. Redesigned `MainKeyboardView.kt` to match HeliBoard reference screenshots:
+     - Soft rectangular keycaps with 6dp corner radius and tight 2.5dp margins.
+     - Clean neutral off-white backdrop (`#E8ECEF`), pure white alpha keys (`#FFFFFF`), neutral slate-grey functional keys (`#DDE2E6`), and HeliBoard action enter key (`#78909C`).
+     - Neutral dark charcoal primary labels (`#202124`) and neutral grey corner sub-labels (`#757575`).
+  3. Updated `MoreKeysSpecs.kt` with the full 16-symbol 2-row grid for `A` and added the `😀` Emoji shortcut to the Comma key popup menu.
+  4. Updated `SuggestionStripView.kt` with matching `#E8ECEF` background and `#202124` text colors.
+  5. Stripped all Android navigation bar overrides from `VianBoardService.kt` to leave system window insets untouched.
+  6. Verified zero-error compilation with `compile_applet`.
 - **How it was verified**: Full zero-error compilation with `compile_applet`.
 - **Deviation**: None.
 - **Follow-up**: Ready for on-device manual QA.
+
 

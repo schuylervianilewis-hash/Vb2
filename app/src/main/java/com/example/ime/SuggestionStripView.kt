@@ -34,10 +34,10 @@ class SuggestionStripView @JvmOverloads constructor(
     private val wordViews = mutableListOf<TextView>()
     private val fastActionViews = mutableListOf<TextView>()
 
-    private val primaryTextColor = Color.parseColor("#CDD6F4")
-    private val autoCorrectColor = Color.parseColor("#89B4FA")
-    private val dimTextColor = Color.parseColor("#6C7086")
-    private val stripBgColor = Color.parseColor("#181825")
+    private val primaryTextColor = Color.parseColor("#202124")
+    private val autoCorrectColor = Color.parseColor("#1976D2")
+    private val dimTextColor = Color.parseColor("#757575")
+    private val stripBgColor = Color.parseColor("#E8ECEF")
 
     init {
         orientation = HORIZONTAL

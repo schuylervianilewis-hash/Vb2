@@ -1,7 +1,7 @@
 package com.example.ime.data
 
 object MoreKeysSpecs {
-    // Map of base keys to their secondary hint sub-label (top right) and long-press alternatives
+    // Map of base keys to their secondary hint sub-label (top right)
     val QWERTY_SUB_LABELS: Map<String, String> = mapOf(
         "1" to "¹", "2" to "²", "3" to "³", "4" to "⁴", "5" to "⁵",
         "6" to "⁶", "7" to "⁷", "8" to "⁸", "9" to "⁹", "0" to "⁰",
@@ -24,8 +24,8 @@ object MoreKeysSpecs {
         "8" to listOf("⁸"),
         "9" to listOf("⁹"),
         "0" to listOf("⁰", "°", "∅"),
-        "Q" to listOf("%", "1", "q"),
-        "W" to listOf("/", "2", "w"),
+        "Q" to listOf("%", "1"),
+        "W" to listOf("/", "2"),
         "E" to listOf("|", "3", "è", "é", "ê", "ë", "ē", "ė", "ę", "€"),
         "R" to listOf("=", "4", "ř", "ŕ"),
         "T" to listOf("[", "5", "þ", "ť", "ţ"),
@@ -34,7 +34,8 @@ object MoreKeysSpecs {
         "I" to listOf("!", "8", "ī", "í", "ì", "î", "ï", "į", "ı"),
         "O" to listOf("-", "9", "ō", "ó", "ò", "ô", "ö", "õ", "ø", "œ"),
         "P" to listOf(";", "0", "π", "¶"),
-        "A" to listOf("@", "ā", "á", "à", "â", "ä", "æ", "ã", "å", "ą"),
+        // Exact 16-symbol HeliBoard 2-row grid for 'A' (Screenshot 011233)
+        "A" to listOf("&", "%", "+", "\"", "-", ":", "'", "@", ";", "/", "(", ")", "#", "!", ",", "?"),
         "S" to listOf("#", "ß", "ś", "š", "ş", "$"),
         "D" to listOf("₹", "$", "€", "£", "¥", "₩", "₽", "¢", "₿"),
         "F" to listOf("_", "ð", "ď"),
@@ -50,7 +51,8 @@ object MoreKeysSpecs {
         "B" to listOf(";", "β"),
         "N" to listOf("!", "ñ", "ń", "ň"),
         "M" to listOf("?", "μ"),
-        "," to listOf("⚙️", "📋", "🪵", "🌐", "🎙️", "📝"),
+        // Comma key popup menu containing Emoji, Settings, Clipboard, Log Keeper, etc.
+        "," to listOf("😀", "⚙️", "📋", "🪵", "🌐", "🎙️", "📝"),
         "." to listOf("!", "?", ",", ";", ":", "-", "_", "@", "/", "#"),
         "?" to listOf("!", "¿", "‽"),
         "!" to listOf("?", "¡"),
@@ -59,4 +61,5 @@ object MoreKeysSpecs {
         "€" to listOf("$", "₹", "£", "¥", "₩", "₽", "¢", "₿")
     )
 }
+
 
