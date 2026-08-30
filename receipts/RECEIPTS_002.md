@@ -225,3 +225,35 @@
 - **Deviation**: None.
 - **Follow-up**: Ready for export and GitHub Actions APK build.
 
+## Entry 055
+- **Timestamp**: 2026-08-30T08:08:30-07:00
+- **Summary**: Implemented lazy emoji dataset initialization and process separation optimization to reduce running service RAM footprint.
+- **Exact Files Touched**:
+  - `/app/src/main/java/com/example/ime/emoji/EmojiData.kt`
+  - `/app/src/main/AndroidManifest.xml`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Converted all 10 Unicode emoji categories (`SMILEYS`, `PEOPLE`, `ANIMALS`, `FOOD`, `TRAVEL`, `ACTIVITIES`, `OBJECTS`, `SYMBOLS`, `FLAGS`, `KAOMOJI`) in `EmojiData.kt` to `by lazy` delegates to prevent heap allocations upon classloading.
+  2. Verified `android:process=":ime"` isolation in `AndroidManifest.xml` so the lightweight keyboard service runs in its own dedicated process without loading the heavy Jetpack Compose UI runtime.
+  3. Verified `ModalOverlayManager` cleanly removes and dereferences child modal views upon dismiss to prevent memory retention.
+  4. Verified full compilation with `compile_applet`.
+- **How it was verified**: Full zero-error compilation with `compile_applet`.
+- **Deviation**: None.
+- **Follow-up**: Ready for on-device RAM verification.
+
+## Entry 056
+- **Timestamp**: 2026-08-30T09:56:00-07:00
+- **Summary**: Validated and enforced multi-process SharedPreferences reload hook in VianBoardService.onStartInputView for immediate settings sync across process boundaries.
+- **Exact Files Touched**:
+  - `/app/src/main/java/com/example/ime/VianBoardService.kt`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Audited `VianBoardService.kt` to ensure zero non-essential daemon threads, pollers, or heavyweight services initialize during idle IME state.
+  2. Verified cross-process preference sync: `onStartInputView` executes a clean disk reload of `GeneralSettings` and applies updated key styling, corner radius, gaps, and border metrics immediately when the keyboard surface appears.
+  3. Verified `onDestroy` lifecycle cleanly dereferences modal managers and overlays.
+  4. Verified full compilation with `compile_applet`.
+- **How it was verified**: Full zero-error compilation with `compile_applet`.
+- **Deviation**: None.
+- **Follow-up**: Ready for on-device RAM and performance verification.
+
+
