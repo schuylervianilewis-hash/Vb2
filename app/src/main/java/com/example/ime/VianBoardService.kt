@@ -1,8 +1,13 @@
 package com.example.ime
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.inputmethodservice.InputMethodService
+import android.os.Build
 import android.view.KeyEvent
 import android.view.View
+import android.view.WindowInsets
 import android.view.inputmethod.EditorInfo
 import com.example.ime.keyboard.KeyData
 import com.example.ime.keyboard.KeyType
@@ -18,11 +23,21 @@ class VianBoardService : InputMethodService() {
         LogKeeper.logComponentStart("VianBoardService")
     }
 
+    override fun onConfigureWindow(win: android.view.Window, isFullscreen: Boolean, isCandidatesOnly: Boolean) {
+        super.onConfigureWindow(win, isFullscreen, isCandidatesOnly)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            win.setDecorFitsSystemWindows(true)
+        }
+    }
+
     override fun onCreateInputView(): View {
-        LogKeeper.logEvent("IME", "onCreateInputView initializing 2D Canvas engine")
+        LogKeeper.logEvent("IME", "onCreateInputView initializing 2D Canvas engine with Option C popups")
         val view = VianKeyboardView(this).apply {
             onKeyAction = { key -> handleKeyAction(key) }
-            onKeyLongPress = { key -> handleKeyLongPress(key) }
+            onTextCommit = { text -> currentInputConnection?.commitText(text, 1) }
+            onActionSelection = { handleSelectionAction() }
+            onActionClipboard = { handleClipboardAction() }
+            onActionExpand = { /* Toolbar expand/collapse toggle */ }
         }
         keyboardView = view
         return view
@@ -74,16 +89,26 @@ class VianBoardService : InputMethodService() {
         }
     }
 
-    private fun handleKeyLongPress(key: KeyData) {
+    private fun handleSelectionAction() {
         val ic = currentInputConnection ?: return
-        if (key.hintLabel != null) {
-            ic.commitText(key.hintLabel, 1)
+        // Select word or line around cursor
+        ic.performContextMenuAction(android.R.id.selectAll)
+    }
+
+    private fun handleClipboardAction() {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager ?: return
+        val clip = clipboard.primaryClip
+        if (clip != null && clip.itemCount > 0) {
+            val text = clip.getItemAt(0).coerceToText(this).toString()
+            if (text.isNotEmpty()) {
+                currentInputConnection?.commitText(text, 1)
+            }
         }
     }
 
     override fun onFinishInputView(finishingInput: Boolean) {
+        LogKeeper.logEvent("IME", "onFinishInputView")
         super.onFinishInputView(finishingInput)
-        LogKeeper.logEvent("IME", "onFinishInputView (finishingInput=$finishingInput)")
     }
 
     override fun onDestroy() {

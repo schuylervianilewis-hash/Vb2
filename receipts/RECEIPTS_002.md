@@ -288,27 +288,41 @@
 - **Deviation**: None. Followed exact discussion blueprint.
 - **Follow-up**: Ready for on-device manual testing and subsequent Main Keyboard Canvas implementation.
 
-## Entry 058
-- **Timestamp**: 2026-09-01T00:37:30-07:00
-- **Summary**: Implemented ultra-lightweight 2D Canvas keyboard rendering engine and input connection dispatcher; eliminated legacy directories.
+## Entry 059
+- **Timestamp**: 2026-09-01T13:32:45-07:00
+- **Summary**: Implemented Option C KeyPopupWindow for zero-clip popups & multi-accent/fraction selection, 5-row layout with dedicated number row, top suggestion toolbar, clean light theme, and navigation bar clearance.
 - **Exact Files Touched**:
   - `/app/src/main/java/com/example/ime/keyboard/KeyData.kt`
   - `/app/src/main/java/com/example/ime/keyboard/KeyboardTheme.kt`
   - `/app/src/main/java/com/example/ime/keyboard/KeyboardLayout.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/KeyPopupWindow.kt`
   - `/app/src/main/java/com/example/ime/keyboard/VianKeyboardView.kt`
   - `/app/src/main/java/com/example/ime/VianBoardService.kt`
-  - `/app/src/main/java/com/example/ui/settings/AppearanceSettingsScreen.kt`
   - `/receipts/RECEIPTS_002.md`
 - **What was actually done**:
-  1. Purged remaining legacy directories from `/app/src/main/java/com/example/`.
-  2. Built `KeyData` model and `KeyboardTheme` loader/persister using lightweight SharedPreferences.
-  3. Created `KeyboardLayout` pure coordinate generator supporting QWERTY (lowercase/uppercase/capslock), Symbols Page 1 (`?123`), and Symbols Page 2 (`=\<`).
-  4. Built `VianKeyboardView` single hardware 2D Canvas custom View rendering background, key shapes, borders, labels, top-corner hints, pressed states, inline popup bubbles, and repeat backspace handler with zero layout inflation or nested views.
-  5. Wired `VianBoardService` to dispatch text and actions to `InputConnection` and reload styling themes on input view appearance.
-  6. Synced `AppearanceSettingsScreen` sliders with `KeyboardTheme` for real-time appearance customization.
+  1. Updated `KeyData` with `moreKeys` table and toolbar key types (`ACTION_EXPAND`, `ACTION_SELECTION`, `ACTION_CLIPBOARD`, `SUGGESTION`).
+  2. Redesigned `KeyboardTheme` to default clean light styling (white keys, light slate canvas, elevated gray bubbles, top-corner hint text).
+  3. Implemented 5-row `KeyboardLayout` featuring dedicated row 0 numbers (`1¹`, `2²`...) with fractions/superscripts in `moreKeys`, QWERTY rows with corner hint symbols, accent tables for vowels and characters (`e` -> `[é, è, ê, ë, ē]`, `u` -> `[ú, ù, û, ü, ū]`), and top suggestion/toolbar strip (`›`, suggestions, `⬚` selection, `📋` clipboard).
+  4. Implemented `KeyPopupWindow` (Option C) using hardware-accelerated `PopupWindow` to float above keys without canvas edge clipping, supporting single-touch elevated bubble and long-press multi-key slide-to-select strip.
+  5. Implemented navigation bar clearance in `VianKeyboardView` via `WindowInsets.Type.navigationBars()` listener and bottom padding.
+  6. Connected selection, clipboard, and text commit actions in `VianBoardService`.
 - **How it was verified**: Full zero-error compilation with `compile_applet`.
+- **Deviation**: None. Followed exact user-specified design and Option C architecture.
+- **Follow-up**: Ready for on-device manual QA.
+
+## Entry 060
+- **Timestamp**: 2026-09-01T14:08:45-07:00
+- **Summary**: Verified and confirmed isolated `:ime` multi-process manifest configuration.
+- **Exact Files Touched**:
+  - `/app/src/main/AndroidManifest.xml`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Inspected `AndroidManifest.xml` and verified that `<service android:name="com.example.ime.VianBoardService" android:process=":ime">` is configured.
+  2. Verified that when `VianBoardService` is active, it runs as an isolated process separate from the `com.example` Compose UI process.
+  3. Ran `compile_applet` to confirm build passes with zero errors.
+- **How it was verified**: Full clean compilation via `compile_applet`.
 - **Deviation**: None.
-- **Follow-up**: Ready for on-device interactive typing and memory profiling.
+- **Follow-up**: Ready for on-device process separation verification.
 
 
 

@@ -2,26 +2,28 @@ package com.example.ime.keyboard
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.graphics.Color
 
 data class KeyboardTheme(
-    val backgroundColor: Int = 0xFF0F172A.toInt(),      // Deep Slate 900
-    val keyBackgroundColor: Int = 0xFF1E293B.toInt(),   // Slate 800
-    val actionKeyColor: Int = 0xFF334155.toInt(),       // Slate 700
+    val backgroundColor: Int = 0xFFF1F5F9.toInt(),      // Light Slate Canvas
+    val keyBackgroundColor: Int = 0xFFFFFFFF.toInt(),   // Pure White Keycaps
+    val actionKeyColor: Int = 0xFFE2E8F0.toInt(),       // Soft Slate Action Keys
+    val enterKeyColor: Int = 0xFF64748B.toInt(),        // Slate 500 for Pill Enter
     val accentColor: Int = 0xFF0284C7.toInt(),          // Sky 600
-    val textColor: Int = 0xFFF8FAFC.toInt(),            // Slate 50
-    val hintColor: Int = 0xFF94A3B8.toInt(),            // Slate 400
-    val borderColor: Int = 0xFF334155.toInt(),          // Slate 700
-    val pressedKeyColor: Int = 0xFF0284C7.toInt(),      // Highlight Sky 600
-    val popupBackgroundColor: Int = 0xFF1E293B.toInt(),
-    val popupTextColor: Int = 0xFFFFFFFF.toInt(),
+    val textColor: Int = 0xFF0F172A.toInt(),            // Slate 900 High Contrast
+    val enterTextColor: Int = 0xFFFFFFFF.toInt(),       // White text on Enter
+    val hintColor: Int = 0xFF64748B.toInt(),            // Slate 500 Hint Labels
+    val borderColor: Int = 0x00000000,                  // Borderless clean M3
+    val pressedKeyColor: Int = 0xFFCBD5E1.toInt(),      // Highlighted Keycap
+    val popupBackgroundColor: Int = 0xFFCBD5E1.toInt(),  // Elevated Bubble (Matching Screenshot)
+    val popupTextColor: Int = 0xFF0F172A.toInt(),
     
     // Metrics in DP
-    val keyHeightDp: Float = 52f,
-    val keyCornerRadiusDp: Float = 10f,
-    val borderWidthDp: Float = 1.0f,
+    val keyHeightDp: Float = 46f,
+    val toolbarHeightDp: Float = 40f,
+    val keyCornerRadiusDp: Float = 8f,
+    val borderWidthDp: Float = 0f,
     val horizontalGapDp: Float = 4f,
-    val verticalGapDp: Float = 6f,
+    val verticalGapDp: Float = 5f,
     val showPopups: Boolean = true,
     val showHints: Boolean = true
 ) {
@@ -38,11 +40,11 @@ data class KeyboardTheme(
         fun loadFromPrefs(context: Context): KeyboardTheme {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             return KeyboardTheme(
-                keyHeightDp = prefs.getFloat(KEY_HEIGHT, 52f),
-                keyCornerRadiusDp = prefs.getFloat(KEY_CORNER_RADIUS, 10f),
-                borderWidthDp = prefs.getFloat(KEY_BORDER_WIDTH, 1.0f),
+                keyHeightDp = prefs.getFloat(KEY_HEIGHT, 46f),
+                keyCornerRadiusDp = prefs.getFloat(KEY_CORNER_RADIUS, 8f),
+                borderWidthDp = prefs.getFloat(KEY_BORDER_WIDTH, 0f),
                 horizontalGapDp = prefs.getFloat(KEY_HORIZONTAL_GAP, 4f),
-                verticalGapDp = prefs.getFloat(KEY_VERTICAL_GAP, 6f),
+                verticalGapDp = prefs.getFloat(KEY_VERTICAL_GAP, 5f),
                 showPopups = prefs.getBoolean(KEY_SHOW_POPUPS, true),
                 showHints = prefs.getBoolean(KEY_SHOW_HINTS, true)
             )

@@ -12,14 +12,17 @@ enum class KeyType {
     ENTER,
     COMMA,
     PERIOD,
-    VOICE_TOGGLE,
-    ACTION
+    ACTION_EXPAND,
+    ACTION_SELECTION,
+    ACTION_CLIPBOARD,
+    SUGGESTION
 }
 
 data class KeyData(
     val code: Int,
     var label: String,
     val hintLabel: String? = null,
+    val moreKeys: List<String> = emptyList(),
     val type: KeyType = KeyType.CHARACTER,
     val weight: Float = 1.0f,
     val bounds: RectF = RectF(),
