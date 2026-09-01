@@ -256,4 +256,60 @@
 - **Deviation**: None.
 - **Follow-up**: Ready for on-device RAM and performance verification.
 
+## Entry 057
+- **Timestamp**: 2026-08-30T14:44:30-07:00
+- **Summary**: Executed clean-slate architecture rebuild; moved legacy codebase to /reference/, established FlorisBoard-style multi-process manifest, created always-on lightweight LogKeeper resource catcher, and rebuilt Welcome & Settings navigation hierarchy.
+- **Exact Files Touched**:
+  - `/app/src/main/AndroidManifest.xml`
+  - `/app/src/main/java/com/example/VianApplication.kt`
+  - `/app/src/main/java/com/example/logger/LogKeeper.kt`
+  - `/app/src/main/java/com/example/ime/VianBoardService.kt`
+  - `/app/src/main/java/com/example/MainActivity.kt`
+  - `/app/src/main/java/com/example/ui/welcome/WelcomeScreen.kt`
+  - `/app/src/main/java/com/example/ui/settings/SettingsRootScreen.kt`
+  - `/app/src/main/java/com/example/ui/settings/AppearanceSettingsScreen.kt`
+  - `/app/src/main/java/com/example/ui/settings/UtilitySettingsScreen.kt`
+  - `/app/src/main/java/com/example/ui/settings/DictionarySettingsScreen.kt`
+  - `/app/src/main/java/com/example/ui/settings/SecurityVaultSettingsScreen.kt`
+  - `/app/src/main/java/com/example/ui/settings/PersonalVaultSettingsScreen.kt`
+  - `/app/src/main/java/com/example/ui/settings/VoiceInputSettingsScreen.kt`
+  - `/app/src/main/java/com/example/ui/settings/SidebarSettingsScreen.kt`
+  - `/app/src/main/java/com/example/ui/settings/BackupRestoreSettingsScreen.kt`
+  - `/app/src/main/java/com/example/ui/logger/LogKeeperScreen.kt`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Relocated all bloated legacy code (`backup`, `diagnostics`, `engine`, `foundation`, `ime`, `keyboard`, `onboarding`, `settings`, `vault`, `voice`) into `/reference/` per Mandate 10.
+  2. Built `VianApplication` with uncaught crash hook routing errors directly into `LogKeeper`.
+  3. Created `LogKeeper` always-on low-overhead ring-buffered resource monitor tracking component lifecycles (started/closed), live JVM heap memory snapshots, error codes, zero PII, with a Master On/Off switch and export facility.
+  4. Built FlorisBoard-modeled `WelcomeScreen` with 4 interactive step cards, instant typing test field, and direct actions to Settings and Log Keeper.
+  5. Built HeliBoard-modeled `SettingsRootScreen` with a clean list of 9 items (no description clutter), organized into dedicated sub-pages.
+  6. Verified zero-error compilation with `compile_applet`.
+- **How it was verified**: Clean zero-error compilation using `compile_applet`.
+- **Deviation**: None. Followed exact discussion blueprint.
+- **Follow-up**: Ready for on-device manual testing and subsequent Main Keyboard Canvas implementation.
+
+## Entry 058
+- **Timestamp**: 2026-09-01T00:37:30-07:00
+- **Summary**: Implemented ultra-lightweight 2D Canvas keyboard rendering engine and input connection dispatcher; eliminated legacy directories.
+- **Exact Files Touched**:
+  - `/app/src/main/java/com/example/ime/keyboard/KeyData.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/KeyboardTheme.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/KeyboardLayout.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/VianKeyboardView.kt`
+  - `/app/src/main/java/com/example/ime/VianBoardService.kt`
+  - `/app/src/main/java/com/example/ui/settings/AppearanceSettingsScreen.kt`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Purged remaining legacy directories from `/app/src/main/java/com/example/`.
+  2. Built `KeyData` model and `KeyboardTheme` loader/persister using lightweight SharedPreferences.
+  3. Created `KeyboardLayout` pure coordinate generator supporting QWERTY (lowercase/uppercase/capslock), Symbols Page 1 (`?123`), and Symbols Page 2 (`=\<`).
+  4. Built `VianKeyboardView` single hardware 2D Canvas custom View rendering background, key shapes, borders, labels, top-corner hints, pressed states, inline popup bubbles, and repeat backspace handler with zero layout inflation or nested views.
+  5. Wired `VianBoardService` to dispatch text and actions to `InputConnection` and reload styling themes on input view appearance.
+  6. Synced `AppearanceSettingsScreen` sliders with `KeyboardTheme` for real-time appearance customization.
+- **How it was verified**: Full zero-error compilation with `compile_applet`.
+- **Deviation**: None.
+- **Follow-up**: Ready for on-device interactive typing and memory profiling.
+
+
+
 
