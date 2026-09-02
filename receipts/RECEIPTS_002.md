@@ -310,19 +310,28 @@
 - **Deviation**: None. Followed exact user-specified design and Option C architecture.
 - **Follow-up**: Ready for on-device manual QA.
 
-## Entry 060
-- **Timestamp**: 2026-09-01T14:08:45-07:00
-- **Summary**: Verified and confirmed isolated `:ime` multi-process manifest configuration.
+## Entry 061
+- **Timestamp**: 2026-09-01T15:16:45-07:00
+- **Summary**: Implemented Path A (Zero-Compose pure View & 2D Canvas architecture) eliminating Compose runtime bloat.
 - **Exact Files Touched**:
-  - `/app/src/main/AndroidManifest.xml`
+  - `/app/build.gradle.kts`
+  - `/app/src/main/res/layout/activity_main.xml`
+  - `/app/src/main/res/layout/activity_logs.xml`
+  - `/app/src/main/java/com/example/MainActivity.kt`
+  - `/app/src/main/java/com/example/ui/` (purged Compose screens)
+  - `/app/src/test/java/com/example/GreetingScreenshotTest.kt` (purged)
+  - `/app/src/test/java/com/example/diagnostics/` (purged)
   - `/receipts/RECEIPTS_002.md`
 - **What was actually done**:
-  1. Inspected `AndroidManifest.xml` and verified that `<service android:name="com.example.ime.VianBoardService" android:process=":ime">` is configured.
-  2. Verified that when `VianBoardService` is active, it runs as an isolated process separate from the `com.example` Compose UI process.
-  3. Ran `compile_applet` to confirm build passes with zero errors.
-- **How it was verified**: Full clean compilation via `compile_applet`.
-- **Deviation**: None.
-- **Follow-up**: Ready for on-device process separation verification.
+  1. Purged `androidx.compose` dependencies, plugins, and compiler extensions from `build.gradle.kts`.
+  2. Deleted all Jetpack Compose screens, ViewModels, and themes in `/app/src/main/java/com/example/ui/`.
+  3. Replaced `MainActivity` with a zero-overhead pure Android `Activity` powered by XML layouts (`activity_main.xml` and `activity_logs.xml`).
+  4. Preserved full functionality: Onboarding setup, real-time keyboard appearance sliders (height, corner radius, gaps, popups, hints), interactive test text field, and LogKeeper view/export.
+  5. Tested and verified complete zero-error compilation with `compile_applet`.
+- **How it was verified**: Clean compilation via `compile_applet`.
+- **Deviation**: None. Followed exact Path A Simple Keyboard / HeliBoard zero-compose architecture.
+- **Follow-up**: Ready for on-device RAM measurement in Settings "Running Services".
+
 
 
 

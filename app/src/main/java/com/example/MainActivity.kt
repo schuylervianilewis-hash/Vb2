@@ -1,114 +1,160 @@
 package com.example
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.*
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import android.provider.Settings
+import android.view.View
+import android.view.inputmethod.InputMethodManager
+import android.widget.*
+import androidx.core.content.FileProvider
+import com.example.ime.keyboard.KeyboardTheme
 import com.example.logger.LogKeeper
-import com.example.ui.logger.LogKeeperScreen
-import com.example.ui.settings.*
-import com.example.ui.theme.MyApplicationTheme
-import com.example.ui.welcome.WelcomeScreen
 
-enum class ScreenState {
-    WELCOME,
-    SETTINGS_ROOT,
-    SETTINGS_APPEARANCE,
-    SETTINGS_UTILITY,
-    SETTINGS_DICTIONARY,
-    SETTINGS_SECURITY_VAULT,
-    SETTINGS_PERSONAL_VAULT,
-    SETTINGS_VOICE_INPUT,
-    SETTINGS_SIDEBAR,
-    SETTINGS_BACKUP_RESTORE,
-    LOG_KEEPER
-}
+class MainActivity : Activity() {
 
-class MainActivity : ComponentActivity() {
+    private lateinit var themeConfig: KeyboardTheme
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         LogKeeper.logComponentStart("MainActivity")
-        enableEdgeToEdge()
+        setContentView(R.layout.activity_main)
 
-        setContent {
-            MyApplicationTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = Color(0xFFF8FAFC)
-                ) {
-                    var currentScreen by remember { mutableStateOf(ScreenState.WELCOME) }
-                    val backStack = remember { mutableStateListOf<ScreenState>() }
+        themeConfig = KeyboardTheme.loadFromPrefs(this)
+        setupViews()
+    }
 
-                    fun navigateTo(screen: ScreenState) {
-                        backStack.add(currentScreen)
-                        currentScreen = screen
-                    }
+    private fun setupViews() {
+        val btnEnableIme = findViewById<Button>(R.id.btnEnableIme)
+        val btnSelectIme = findViewById<Button>(R.id.btnSelectIme)
+        val btnLogs = findViewById<Button>(R.id.btnLogs)
 
-                    fun navigateBack() {
-                        if (backStack.isNotEmpty()) {
-                            currentScreen = backStack.removeAt(backStack.size - 1)
-                        } else {
-                            currentScreen = ScreenState.WELCOME
-                        }
-                    }
+        val tvKeyHeight = findViewById<TextView>(R.id.tvKeyHeight)
+        val sbKeyHeight = findViewById<SeekBar>(R.id.sbKeyHeight)
 
-                    when (currentScreen) {
-                        ScreenState.WELCOME -> {
-                            WelcomeScreen(
-                                onOpenSettings = { navigateTo(ScreenState.SETTINGS_ROOT) },
-                                onOpenLogKeeper = { navigateTo(ScreenState.LOG_KEEPER) }
-                            )
-                        }
-                        ScreenState.SETTINGS_ROOT -> {
-                            SettingsRootScreen(
-                                onNavigateBack = { navigateBack() },
-                                onNavigateToAppearance = { navigateTo(ScreenState.SETTINGS_APPEARANCE) },
-                                onNavigateToUtility = { navigateTo(ScreenState.SETTINGS_UTILITY) },
-                                onNavigateToDictionary = { navigateTo(ScreenState.SETTINGS_DICTIONARY) },
-                                onNavigateToSecurityVault = { navigateTo(ScreenState.SETTINGS_SECURITY_VAULT) },
-                                onNavigateToPersonalVault = { navigateTo(ScreenState.SETTINGS_PERSONAL_VAULT) },
-                                onNavigateToVoiceInput = { navigateTo(ScreenState.SETTINGS_VOICE_INPUT) },
-                                onNavigateToSidebar = { navigateTo(ScreenState.SETTINGS_SIDEBAR) },
-                                onNavigateToBackupRestore = { navigateTo(ScreenState.SETTINGS_BACKUP_RESTORE) },
-                                onNavigateToLogKeeper = { navigateTo(ScreenState.LOG_KEEPER) }
-                            )
-                        }
-                        ScreenState.SETTINGS_APPEARANCE -> {
-                            AppearanceSettingsScreen(onNavigateBack = { navigateBack() })
-                        }
-                        ScreenState.SETTINGS_UTILITY -> {
-                            UtilitySettingsScreen(onNavigateBack = { navigateBack() })
-                        }
-                        ScreenState.SETTINGS_DICTIONARY -> {
-                            DictionarySettingsScreen(onNavigateBack = { navigateBack() })
-                        }
-                        ScreenState.SETTINGS_SECURITY_VAULT -> {
-                            SecurityVaultSettingsScreen(onNavigateBack = { navigateBack() })
-                        }
-                        ScreenState.SETTINGS_PERSONAL_VAULT -> {
-                            PersonalVaultSettingsScreen(onNavigateBack = { navigateBack() })
-                        }
-                        ScreenState.SETTINGS_VOICE_INPUT -> {
-                            VoiceInputSettingsScreen(onNavigateBack = { navigateBack() })
-                        }
-                        ScreenState.SETTINGS_SIDEBAR -> {
-                            SidebarSettingsScreen(onNavigateBack = { navigateBack() })
-                        }
-                        ScreenState.SETTINGS_BACKUP_RESTORE -> {
-                            BackupRestoreSettingsScreen(onNavigateBack = { navigateBack() })
-                        }
-                        ScreenState.LOG_KEEPER -> {
-                            LogKeeperScreen(onNavigateBack = { navigateBack() })
-                        }
-                    }
+        val tvKeyCornerRadius = findViewById<TextView>(R.id.tvKeyCornerRadius)
+        val sbKeyCornerRadius = findViewById<SeekBar>(R.id.sbKeyCornerRadius)
+
+        val tvKeyGap = findViewById<TextView>(R.id.tvKeyGap)
+        val sbKeyGap = findViewById<SeekBar>(R.id.sbKeyGap)
+
+        val swShowPopups = findViewById<Switch>(R.id.swShowPopups)
+        val swShowHints = findViewById<Switch>(R.id.swShowHints)
+
+        // 1. Setup Enable / Select buttons
+        btnEnableIme.setOnClickListener {
+            LogKeeper.logEvent("Onboarding", "User clicked Open System Settings")
+            startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
+        }
+
+        btnSelectIme.setOnClickListener {
+            LogKeeper.logEvent("Onboarding", "User clicked Switch Input Method")
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.showInputMethodPicker()
+        }
+
+        btnLogs.setOnClickListener {
+            showLogsView()
+        }
+
+        // 2. Setup Sliders
+        sbKeyHeight.progress = themeConfig.keyHeightDp.toInt()
+        tvKeyHeight.text = "Key Height: ${sbKeyHeight.progress} dp"
+        sbKeyHeight.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    tvKeyHeight.text = "Key Height: $progress dp"
+                    themeConfig = themeConfig.copy(keyHeightDp = progress.toFloat())
+                    KeyboardTheme.saveToPrefs(this@MainActivity, themeConfig)
                 }
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        sbKeyCornerRadius.progress = themeConfig.keyCornerRadiusDp.toInt()
+        tvKeyCornerRadius.text = "Key Corner Radius: ${sbKeyCornerRadius.progress} dp"
+        sbKeyCornerRadius.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    tvKeyCornerRadius.text = "Key Corner Radius: $progress dp"
+                    themeConfig = themeConfig.copy(keyCornerRadiusDp = progress.toFloat())
+                    KeyboardTheme.saveToPrefs(this@MainActivity, themeConfig)
+                }
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        sbKeyGap.progress = themeConfig.horizontalGapDp.toInt()
+        tvKeyGap.text = "Horizontal Gap: ${sbKeyGap.progress} dp"
+        sbKeyGap.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    tvKeyGap.text = "Horizontal Gap: $progress dp"
+                    themeConfig = themeConfig.copy(horizontalGapDp = progress.toFloat(), verticalGapDp = progress.toFloat() + 1f)
+                    KeyboardTheme.saveToPrefs(this@MainActivity, themeConfig)
+                }
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        swShowPopups.isChecked = themeConfig.showPopups
+        swShowPopups.setOnCheckedChangeListener { _, isChecked ->
+            themeConfig = themeConfig.copy(showPopups = isChecked)
+            KeyboardTheme.saveToPrefs(this, themeConfig)
+        }
+
+        swShowHints.isChecked = themeConfig.showHints
+        swShowHints.setOnCheckedChangeListener { _, isChecked ->
+            themeConfig = themeConfig.copy(showHints = isChecked)
+            KeyboardTheme.saveToPrefs(this, themeConfig)
+        }
+    }
+
+    private fun showLogsView() {
+        setContentView(R.layout.activity_logs)
+
+        val btnBack = findViewById<Button>(R.id.btnBack)
+        val btnExportLogs = findViewById<Button>(R.id.btnExportLogs)
+        val btnClearLogs = findViewById<Button>(R.id.btnClearLogs)
+        val tvMemoryStats = findViewById<TextView>(R.id.tvMemoryStats)
+        val tvLogContent = findViewById<TextView>(R.id.tvLogContent)
+
+        tvMemoryStats.text = "Heap: ${LogKeeper.getMemorySnapshotMb()} MB / Max: ${LogKeeper.getMaxMemoryMb()} MB"
+        
+        val logs = LogKeeper.getLogs()
+        val sb = StringBuilder()
+        for (log in logs) {
+            sb.append("[${log.timestamp}] [${log.level}] (${log.memoryUsageMb} MB) ${log.message}\n")
+        }
+        tvLogContent.text = sb.toString()
+
+        btnBack.setOnClickListener {
+            setContentView(R.layout.activity_main)
+            setupViews()
+        }
+
+        btnClearLogs.setOnClickListener {
+            LogKeeper.clearLogs()
+            tvLogContent.text = "Logs cleared."
+        }
+
+        btnExportLogs.setOnClickListener {
+            val file = LogKeeper.exportLogsToFile(this)
+            if (file != null) {
+                val uri: Uri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", file)
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(Intent.createChooser(intent, "Export Vian Logs"))
+            } else {
+                Toast.makeText(this, "Failed to export logs", Toast.LENGTH_SHORT).show()
             }
         }
     }
