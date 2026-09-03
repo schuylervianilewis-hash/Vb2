@@ -11,14 +11,12 @@
     android:background="#FFFFFF">
 
     <!-- Drag handle indicator -->
-    <TextView
-        android:id="@+id/tvDragHandle"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:text="⠿"
-        android:textSize="20sp"
-        android:textColor="#94A3B8"
-        android:gravity="center" />
+    <ImageView
+        android:id="@+id/ivDragHandle"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:src="@drawable/ic_drag_handle"
+        android:contentDescription="Reorder drag handle" />
 
     <!-- Icon -->
     <ImageView

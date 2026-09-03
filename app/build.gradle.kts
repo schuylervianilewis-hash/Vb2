@@ -76,6 +76,7 @@ secrets {
 // Unused dependencies are commented out to optimize memory & APK size
 dependencies {
   implementation(libs.androidx.core.ktx)
+  implementation(libs.androidx.recyclerview)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
   testImplementation(libs.androidx.core)

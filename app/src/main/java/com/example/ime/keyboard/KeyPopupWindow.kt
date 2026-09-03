@@ -131,12 +131,13 @@ class KeyPopupWindow(private val context: Context) {
         anchor.getLocationInWindow(location)
 
         val screenWidth = context.resources.displayMetrics.widthPixels
-        val desiredX = location[0] + key.bounds.centerX() - (cellWidth * 1.5f)
+        val desiredX = location[0] + key.bounds.centerX() - (popupWidth / 2f)
         val clampedX = desiredX.coerceIn(8f * density, screenWidth - popupWidth - (8f * density)).toInt()
         val posY = (location[1] + key.bounds.top - popupHeight - (8 * density)).toInt()
 
         popupView.popupWindowScreenX = clampedX.toFloat()
         popupView.popupWindowScreenY = posY.toFloat()
+        popupView.anchorKeyScreenY = location[1] + key.bounds.centerY()
         popupView.itemWidth = cellWidth
         popupView.itemHeight = cellHeight
 
@@ -154,11 +155,19 @@ class KeyPopupWindow(private val context: Context) {
 
         if (popupView.mode == PopupMode.GRID) {
             val padding = 8f * density
-            val relativeX = (touchXOnScreen - popupView.popupWindowScreenX - padding).coerceAtLeast(0f)
-            val relativeY = (touchYOnScreen - popupView.popupWindowScreenY - padding).coerceAtLeast(0f)
-
+            val relativeX = touchXOnScreen - popupView.popupWindowScreenX - padding
             val col = (relativeX / popupView.itemWidth).toInt().coerceIn(0, popupView.numCols - 1)
-            val row = (relativeY / popupView.itemHeight).toInt().coerceIn(0, popupView.numRows - 1)
+
+            // Calculate row: natural thumb swipe moves upward from key anchor
+            // Popup sits above the key: row 0 is top row, row 1 is bottom row.
+            // If finger is close to anchor key or in lower half of popup -> row 1 (bottom row)
+            // If finger moves further up into upper half or above -> row 0 (top row)
+            val popupBottom = popupView.popupWindowScreenY + (popupView.numRows * popupView.itemHeight) + (padding * 2)
+            val row = if (touchYOnScreen > popupView.popupWindowScreenY + popupView.itemHeight + padding) {
+                1.coerceAtMost(popupView.numRows - 1)
+            } else {
+                0
+            }
 
             val index = (row * popupView.numCols + col).coerceIn(0, popupView.items.size - 1)
             if (index != popupView.selectedIndex) {
@@ -198,6 +207,7 @@ class KeyPopupWindow(private val context: Context) {
         var selectedIndex: Int = 0
         var popupWindowScreenX: Float = 0f
         var popupWindowScreenY: Float = 0f
+        var anchorKeyScreenY: Float = 0f
         var itemWidth: Float = 0f
         var itemHeight: Float = 0f
         var numCols: Int = 1

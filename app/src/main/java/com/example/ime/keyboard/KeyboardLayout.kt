@@ -123,14 +123,7 @@ class KeyboardLayout {
         if (isToolbarExpanded) {
             // EXPANDED TOOLBAR: Ensure touch targets are at least 42dp wide with horizontal scroll
             val toolsToRender = expandedTools.ifEmpty {
-                listOf(
-                    com.example.ime.toolbar.ToolbarTool.UNDO,
-                    com.example.ime.toolbar.ToolbarTool.REDO,
-                    com.example.ime.toolbar.ToolbarTool.SELECT_WORD,
-                    com.example.ime.toolbar.ToolbarTool.COPY,
-                    com.example.ime.toolbar.ToolbarTool.PASTE,
-                    com.example.ime.toolbar.ToolbarTool.SETTINGS
-                )
+                com.example.ime.toolbar.ToolbarTool.values().filter { it.isDefaultExpanded }
             }
 
             val remainingWidth = totalWidth - anchorBtnWidth - spacing

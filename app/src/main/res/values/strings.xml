@@ -22,6 +22,14 @@
 
     <!-- Toolbar Tools -->
     <string name="tool_incognito">Force incognito mode</string>
+    <string name="tool_clipboard">Clipboard history</string>
+    <string name="tool_text_edit">Text editing pad</string>
+    <string name="tool_theme">Theme switcher</string>
+    <string name="tool_emoji">Emoji &amp; symbols</string>
+    <string name="tool_number_row">Number row toggle</string>
+    <string name="tool_clear_clipboard">Clear clipboard</string>
+    <string name="tool_one_handed">One-handed mode</string>
+    <string name="tool_floating">Floating keyboard</string>
     <string name="tool_undo">Undo</string>
     <string name="tool_redo">Redo</string>
     <string name="tool_select_word">Select word</string>
@@ -33,6 +41,8 @@
     <string name="tool_voice">Voice input</string>
     <string name="tool_prompt_list">Prompt list</string>
     <string name="tool_security_vault">Security vault</string>
+    <string name="tool_personal_vault">Personal vault</string>
+    <string name="tool_log_keeper">Log keeper</string>
     <string name="tool_desktop_shortcuts">Desktop shortcuts</string>
     <string name="tool_settings">Settings</string>
 </resources>

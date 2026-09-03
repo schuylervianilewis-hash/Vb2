@@ -8,6 +8,7 @@ import android.inputmethodservice.InputMethodService
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.text.InputType
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowInsets
@@ -69,13 +70,22 @@ class VianBoardService : InputMethodService() {
         super.onStartInputView(info, restarting)
         LogKeeper.logEvent("IME", "onStartInputView (restarting=$restarting)")
         keyboardView?.reloadTheme()
+
+        // Check if input requests numbers (EditorInfo.TYPE_CLASS_NUMBER or TYPE_CLASS_PHONE)
+        val inputType = info?.inputType ?: 0
+        val inputClass = inputType and InputType.TYPE_MASK_CLASS
+        if (inputClass == InputType.TYPE_CLASS_NUMBER || inputClass == InputType.TYPE_CLASS_PHONE) {
+            keyboardView?.setMode(com.example.ime.keyboard.KeyboardMode.NUMPAD)
+        } else {
+            keyboardView?.setMode(com.example.ime.keyboard.KeyboardMode.CHARACTERS)
+        }
     }
 
     private fun toggleToolbarExpand() {
         keyboardView?.let { kv ->
             kv.layout.isToolbarExpanded = !kv.layout.isToolbarExpanded
             val density = resources.displayMetrics.density
-            kv.layout.buildLayout(kv.width.toFloat(), kv.height.toFloat(), kv.theme, density)
+            kv.layout.buildLayout(kv.width.toFloat(), kv.height.toFloat(), kv.theme, density, kv.bottomNavInsetPx)
             kv.invalidate()
         }
     }
@@ -93,7 +103,7 @@ class VianBoardService : InputMethodService() {
         keyboardView?.let { kv ->
             kv.layout.isIncognitoActive = true
             val density = resources.displayMetrics.density
-            kv.layout.buildLayout(kv.width.toFloat(), kv.height.toFloat(), kv.theme, density)
+            kv.layout.buildLayout(kv.width.toFloat(), kv.height.toFloat(), kv.theme, density, kv.bottomNavInsetPx)
             kv.invalidate()
         }
         Toast.makeText(this, "Incognito mode active (3 min)", Toast.LENGTH_SHORT).show()
@@ -161,6 +171,44 @@ class VianBoardService : InputMethodService() {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
                 startActivity(intent)
+            }
+            ToolbarTool.CLIPBOARD -> {
+                handleClipboardAction()
+            }
+            ToolbarTool.TEXT_EDIT -> {
+                // Text editing pad / select all & copy
+                ic?.performContextMenuAction(android.R.id.selectAll)
+                Toast.makeText(this, "Text editing: All text selected", Toast.LENGTH_SHORT).show()
+            }
+            ToolbarTool.THEME -> {
+                val intent = Intent(this, com.example.ime.settings.AppearanceSettingsActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                startActivity(intent)
+            }
+            ToolbarTool.EMOJI -> {
+                ic?.commitText("😊", 1)
+            }
+            ToolbarTool.NUMBER_ROW -> {
+                Toast.makeText(this, "Number row toggle", Toast.LENGTH_SHORT).show()
+            }
+            ToolbarTool.CLEAR_CLIPBOARD -> {
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                clipboard?.clearPrimaryClip()
+                Toast.makeText(this, "Clipboard cleared", Toast.LENGTH_SHORT).show()
+            }
+            ToolbarTool.ONE_HANDED -> {
+                Toast.makeText(this, "One-handed mode: Coming soon", Toast.LENGTH_SHORT).show()
+            }
+            ToolbarTool.FLOATING -> {
+                Toast.makeText(this, "Floating keyboard: Coming soon", Toast.LENGTH_SHORT).show()
+            }
+            ToolbarTool.LOG_KEEPER -> {
+                val logs = LogKeeper.getLogs()
+                Toast.makeText(this, "Log Keeper: ${logs.size} entries", Toast.LENGTH_SHORT).show()
+            }
+            ToolbarTool.PERSONAL_VAULT -> {
+                Toast.makeText(this, "Personal vault: Coming soon", Toast.LENGTH_SHORT).show()
             }
         }
     }

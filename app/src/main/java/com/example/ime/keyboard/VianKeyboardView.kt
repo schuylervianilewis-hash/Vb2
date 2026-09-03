@@ -110,7 +110,8 @@ class VianKeyboardView @JvmOverloads constructor(
     private var lastShiftPressTime = 0L
     private var isMultiPopupActive = false
     private var isCommaGridPopupActive = false
-    private var bottomNavInsetPx = 0f
+    private var isPeriodGridPopupActive = false
+    internal var bottomNavInsetPx = 0f
 
     // Comma popup item definitions (10 items across 2 rows)
     private val commaPopupItems = listOf(
@@ -128,6 +129,14 @@ class VianKeyboardView @JvmOverloads constructor(
         R.drawable.ic_floating_keyboard,
         R.drawable.ic_personal_vault,
         R.drawable.ic_security_vault
+    )
+
+    // Period popup symbol definitions (16 symbols: 2 rows of 8) matching Screenshot 1
+    // Top Row: ! ? ; / ^ : ~ \
+    // Bottom Row: " ' - ( ) [ ] {
+    private val periodPopupItems = listOf(
+        "!", "?", ";", "/", "^", ":", "~", "\\",
+        "\"", "'", "-", "(", ")", "[", "]", "{"
     )
 
     // Long-press and repeat handler
@@ -165,6 +174,18 @@ class VianKeyboardView @JvmOverloads constructor(
                     items = commaPopupItems,
                     iconResIds = commaPopupIcons,
                     cols = 5,
+                    rows = 2,
+                    theme = theme
+                )
+            } else if (key.type == KeyType.PERIOD) {
+                isLongPressTriggered = true
+                isPeriodGridPopupActive = true
+                popupWindow.showGridKeys(
+                    anchor = this@VianKeyboardView,
+                    key = key,
+                    items = periodPopupItems,
+                    iconResIds = emptyList(),
+                    cols = 8,
                     rows = 2,
                     theme = theme
                 )
@@ -237,6 +258,16 @@ class VianKeyboardView @JvmOverloads constructor(
     fun reloadTheme() {
         theme = KeyboardTheme.loadFromPrefs(context)
         reloadToolbarConfiguration()
+    }
+
+    fun setMode(newMode: KeyboardMode) {
+        if (layout.mode != newMode) {
+            layout.mode = newMode
+            val density = resources.displayMetrics.density
+            requestLayout()
+            layout.buildLayout(width.toFloat(), height.toFloat(), theme, density, bottomNavInsetPx)
+            invalidate()
+        }
     }
 
     fun reloadToolbarConfiguration() {
@@ -454,7 +485,7 @@ class VianKeyboardView @JvmOverloads constructor(
             }
 
             MotionEvent.ACTION_MOVE -> {
-                if (isCommaGridPopupActive) {
+                if (isCommaGridPopupActive || isPeriodGridPopupActive) {
                     popupWindow.updateSelection(event.rawX, event.rawY)
                 } else if (isMultiPopupActive) {
                     popupWindow.updateSelection(event.rawX, event.rawY)
@@ -513,6 +544,11 @@ class VianKeyboardView @JvmOverloads constructor(
                     if (!selected.isNullOrEmpty()) {
                         onCommaPopupSelected?.invoke(selected)
                     }
+                } else if (isPeriodGridPopupActive) {
+                    val selected = popupWindow.getSelectedItem()
+                    if (!selected.isNullOrEmpty()) {
+                        onTextCommit?.invoke(selected)
+                    }
                 } else if (isMultiPopupActive) {
                     val selected = popupWindow.getSelectedItem()
                     if (!selected.isNullOrEmpty()) {
@@ -531,6 +567,7 @@ class VianKeyboardView @JvmOverloads constructor(
                 isRepeatingBackspace = false
                 isMultiPopupActive = false
                 isCommaGridPopupActive = false
+                isPeriodGridPopupActive = false
                 invalidate()
                 return true
             }
@@ -544,6 +581,7 @@ class VianKeyboardView @JvmOverloads constructor(
                 isRepeatingBackspace = false
                 isMultiPopupActive = false
                 isCommaGridPopupActive = false
+                isPeriodGridPopupActive = false
                 isToolbarScrolling = false
                 invalidate()
                 return true
@@ -570,7 +608,11 @@ class VianKeyboardView @JvmOverloads constructor(
             }
 
             KeyType.SYMBOLS_TOGGLE -> {
-                layout.mode = if (layout.mode == KeyboardMode.CHARACTERS) KeyboardMode.SYMBOLS_1 else KeyboardMode.CHARACTERS
+                layout.mode = when (layout.mode) {
+                    KeyboardMode.CHARACTERS -> KeyboardMode.SYMBOLS_1
+                    KeyboardMode.NUMPAD -> KeyboardMode.CHARACTERS
+                    else -> KeyboardMode.CHARACTERS
+                }
                 val density = resources.displayMetrics.density
                 layout.buildLayout(width.toFloat(), height.toFloat(), theme, density, bottomNavInsetPx)
                 invalidate()

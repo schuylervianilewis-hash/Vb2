@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F8FAFC">
+    android:background="#F8FAFC"
+    android:fitsSystemWindows="true">
 
     <!-- Header bar -->
     <LinearLayout
@@ -100,41 +101,71 @@
             </LinearLayout>
 
             <!-- Pinned to Right Section -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="PINNED TO RIGHT (COLLAPSED BAR)"
-                android:textColor="#94A3B8"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.08"
-                android:layout_marginBottom="8dp" />
-
             <LinearLayout
-                android:id="@+id/containerPinnedTools"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📌"
+                    android:textSize="14sp"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PINNED TOOLS (ALWAYS VISIBLE ON RIGHT)"
+                    android:textColor="#3B82F6"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvPinnedTools"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
                 android:background="#FFFFFF"
                 android:elevation="1dp"
                 android:layout_marginBottom="24dp" />
 
             <!-- Select Toolbar Keys Section -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="SELECT TOOLBAR KEYS (EXPANDED BAR)"
-                android:textColor="#94A3B8"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.08"
-                android:layout_marginBottom="8dp" />
-
             <LinearLayout
-                android:id="@+id/containerExpandedTools"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="❯"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="EXPANDED TOOLS (VISIBLE AFTER TAPPING CHEVRON ❯)"
+                    android:textColor="#0F172A"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvExpandedTools"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
                 android:background="#FFFFFF"
                 android:elevation="1dp"
                 android:layout_marginBottom="32dp" />

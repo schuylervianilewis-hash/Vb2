@@ -153,3 +153,5 @@
 | **Phase 2E** | Emoji & Kaomoji Picker Modal (10 Category Tabs + Grid + 4 Bottom Buttons: ABC, Space, Backspace, Enter) | COMPLETED |
 | **Phase 2F** | Interaction Matrix (Long-press Shortcuts, 3-Min Incognito, Comma Menu, Placeholders) | COMPLETED |
 | **Phase 2G** | One-Handed Mode Docking & Zero-Resource Idle Stub Integration | PLANNED |
+| **Phase 2H** | Hard Rule System Bar Insets, Period 16-Symbol Popup (2x8), Auto-Numpad Switch & Toolbar Drag UI | COMPLETED |
+| **Phase 2I** | HeliBoard Fedora Incognito Icon, Full HeliBoard Tools Array & Interactive Drag-Handle Reordering (ItemTouchHelper) | COMPLETED |
