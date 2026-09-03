@@ -3,10 +3,11 @@ package com.example.ime.keyboard
 import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.widget.PopupWindow
+import androidx.core.content.ContextCompat
 
 class KeyPopupWindow(private val context: Context) {
 
@@ -29,6 +30,9 @@ class KeyPopupWindow(private val context: Context) {
         popupView.theme = theme
         popupView.targetKey = key
         popupView.items = listOf(key.label)
+        popupView.iconResIds = emptyList()
+        popupView.numCols = 1
+        popupView.numRows = 1
         popupView.selectedIndex = 0
 
         val density = context.resources.displayMetrics.density
@@ -58,6 +62,9 @@ class KeyPopupWindow(private val context: Context) {
         popupView.theme = theme
         popupView.targetKey = key
         popupView.items = items
+        popupView.iconResIds = emptyList()
+        popupView.numCols = items.size
+        popupView.numRows = 1
         popupView.selectedIndex = 0
 
         val density = context.resources.displayMetrics.density
@@ -78,7 +85,9 @@ class KeyPopupWindow(private val context: Context) {
         val posY = (location[1] + key.bounds.top - popupHeight - (6 * density)).toInt()
 
         popupView.popupWindowScreenX = clampedX.toFloat()
+        popupView.popupWindowScreenY = posY.toFloat()
         popupView.itemWidth = itemWidth
+        popupView.itemHeight = popupHeight.toFloat() - (8f * density)
 
         if (popupWindow.isShowing) {
             popupWindow.update(clampedX, posY, popupWidth, popupHeight)
@@ -88,9 +97,76 @@ class KeyPopupWindow(private val context: Context) {
         }
     }
 
-    fun updateSelection(touchXOnScreen: Float) {
-        if (popupView.mode == PopupMode.MULTI && popupView.items.isNotEmpty()) {
-            val relativeX = touchXOnScreen - popupView.popupWindowScreenX - (6f * context.resources.displayMetrics.density)
+    fun showGridKeys(
+        anchor: View,
+        key: KeyData,
+        items: List<String>,
+        iconResIds: List<Int>,
+        cols: Int,
+        rows: Int,
+        theme: KeyboardTheme
+    ) {
+        if (items.isEmpty()) return
+        popupView.mode = PopupMode.GRID
+        popupView.theme = theme
+        popupView.targetKey = key
+        popupView.items = items
+        popupView.iconResIds = iconResIds
+        popupView.numCols = cols
+        popupView.numRows = rows
+        popupView.selectedIndex = 0
+
+        val density = context.resources.displayMetrics.density
+        val cellWidth = (44f * density)
+        val cellHeight = (42f * density)
+        val padding = 8f * density
+
+        val popupWidth = (cols * cellWidth + (padding * 2)).toInt()
+        val popupHeight = (rows * cellHeight + (padding * 2)).toInt()
+
+        popupWindow.width = popupWidth
+        popupWindow.height = popupHeight
+
+        val location = IntArray(2)
+        anchor.getLocationInWindow(location)
+
+        val screenWidth = context.resources.displayMetrics.widthPixels
+        val desiredX = location[0] + key.bounds.centerX() - (cellWidth * 1.5f)
+        val clampedX = desiredX.coerceIn(8f * density, screenWidth - popupWidth - (8f * density)).toInt()
+        val posY = (location[1] + key.bounds.top - popupHeight - (8 * density)).toInt()
+
+        popupView.popupWindowScreenX = clampedX.toFloat()
+        popupView.popupWindowScreenY = posY.toFloat()
+        popupView.itemWidth = cellWidth
+        popupView.itemHeight = cellHeight
+
+        if (popupWindow.isShowing) {
+            popupWindow.update(clampedX, posY, popupWidth, popupHeight)
+            popupView.invalidate()
+        } else {
+            popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, clampedX, posY)
+        }
+    }
+
+    fun updateSelection(touchXOnScreen: Float, touchYOnScreen: Float = 0f) {
+        if (popupView.items.isEmpty()) return
+        val density = context.resources.displayMetrics.density
+
+        if (popupView.mode == PopupMode.GRID) {
+            val padding = 8f * density
+            val relativeX = (touchXOnScreen - popupView.popupWindowScreenX - padding).coerceAtLeast(0f)
+            val relativeY = (touchYOnScreen - popupView.popupWindowScreenY - padding).coerceAtLeast(0f)
+
+            val col = (relativeX / popupView.itemWidth).toInt().coerceIn(0, popupView.numCols - 1)
+            val row = (relativeY / popupView.itemHeight).toInt().coerceIn(0, popupView.numRows - 1)
+
+            val index = (row * popupView.numCols + col).coerceIn(0, popupView.items.size - 1)
+            if (index != popupView.selectedIndex) {
+                popupView.selectedIndex = index
+                popupView.invalidate()
+            }
+        } else if (popupView.mode == PopupMode.MULTI) {
+            val relativeX = touchXOnScreen - popupView.popupWindowScreenX - (6f * density)
             val index = (relativeX / popupView.itemWidth).toInt().coerceIn(0, popupView.items.size - 1)
             if (index != popupView.selectedIndex) {
                 popupView.selectedIndex = index
@@ -111,16 +187,23 @@ class KeyPopupWindow(private val context: Context) {
         }
     }
 
-    private enum class PopupMode { SINGLE, MULTI }
+    private enum class PopupMode { SINGLE, MULTI, GRID }
 
     private class PopupCanvasView(context: Context) : View(context) {
         var mode = PopupMode.SINGLE
         var theme = KeyboardTheme()
         var targetKey: KeyData? = null
         var items: List<String> = emptyList()
+        var iconResIds: List<Int> = emptyList()
         var selectedIndex: Int = 0
         var popupWindowScreenX: Float = 0f
+        var popupWindowScreenY: Float = 0f
         var itemWidth: Float = 0f
+        var itemHeight: Float = 0f
+        var numCols: Int = 1
+        var numRows: Int = 1
+
+        private val drawableCache = mutableMapOf<Int, Drawable?>()
 
         private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.FILL
@@ -162,10 +245,51 @@ class KeyPopupWindow(private val context: Context) {
                 val label = items.firstOrNull() ?: ""
                 val textY = rect.centerY() - ((textPaint.descent() + textPaint.ascent()) / 2)
                 canvas.drawText(label, rect.centerX(), textY, textPaint)
+            } else if (mode == PopupMode.GRID) {
+                // 2-row multi-column grid
+                val padding = 8f * density
+                val startX = rect.left + (padding - 4f * density)
+                val startY = rect.top + (padding - 4f * density)
+
+                for (i in items.indices) {
+                    val row = i / numCols
+                    val col = i % numCols
+
+                    val cellLeft = startX + (col * itemWidth)
+                    val cellTop = startY + (row * itemHeight)
+                    val cellRight = cellLeft + itemWidth
+                    val cellBottom = cellTop + itemHeight
+
+                    val isSelected = (i == selectedIndex)
+                    val cellRect = RectF(cellLeft + (2f * density), cellTop + (2f * density), cellRight - (2f * density), cellBottom - (2f * density))
+
+                    if (isSelected) {
+                        val selRadius = 8f * density
+                        canvas.drawRoundRect(cellRect, selRadius, selRadius, selectedBgPaint)
+                    }
+
+                    val iconRes = iconResIds.getOrNull(i) ?: 0
+                    if (iconRes != 0) {
+                        val drawable = drawableCache.getOrPut(iconRes) {
+                            ContextCompat.getDrawable(context, iconRes) ?: return@getOrPut null
+                        }
+                        if (drawable != null) {
+                            val iconSize = (20f * density).toInt()
+                            val cx = cellRect.centerX().toInt()
+                            val cy = cellRect.centerY().toInt()
+                            drawable.setBounds(cx - iconSize / 2, cy - iconSize / 2, cx + iconSize / 2, cy + iconSize / 2)
+                            drawable.setTint(if (isSelected) Color.WHITE else theme.popupTextColor)
+                            drawable.draw(canvas)
+                        }
+                    } else {
+                        val curPaint = if (isSelected) selectedTextPaint else textPaint
+                        val textY = cellRect.centerY() - ((curPaint.descent() + curPaint.ascent()) / 2)
+                        canvas.drawText(items[i], cellRect.centerX(), textY, curPaint)
+                    }
+                }
             } else {
                 // Multi-key horizontal strip
                 val startX = rect.left + (2f * density)
-                val itemH = rect.height()
 
                 for (i in items.indices) {
                     val itemLeft = startX + (i * itemWidth)

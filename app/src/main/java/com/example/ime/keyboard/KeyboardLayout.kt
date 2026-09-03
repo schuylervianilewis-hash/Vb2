@@ -5,7 +5,8 @@ import android.graphics.RectF
 enum class KeyboardMode {
     CHARACTERS,
     SYMBOLS_1,
-    SYMBOLS_2
+    SYMBOLS_2,
+    NUMPAD
 }
 
 enum class ShiftState {
@@ -22,7 +23,35 @@ class KeyboardLayout {
     val keys = mutableListOf<KeyData>()
     val toolbarKeys = mutableListOf<KeyData>()
 
-    var suggestions: List<String> = listOf("The", "and", "to")
+    var suggestions: List<String> = listOf("images", "imahe...", "imagery")
+
+    var isToolbarExpanded: Boolean = false
+    var isIncognitoActive: Boolean = false
+    var pinnedTools: List<com.example.ime.toolbar.ToolbarTool> = listOf(
+        com.example.ime.toolbar.ToolbarTool.SELECT_WORD,
+        com.example.ime.toolbar.ToolbarTool.COPY,
+        com.example.ime.toolbar.ToolbarTool.PASTE
+    )
+    var expandedTools: List<com.example.ime.toolbar.ToolbarTool> = listOf(
+        com.example.ime.toolbar.ToolbarTool.INCOGNITO,
+        com.example.ime.toolbar.ToolbarTool.UNDO,
+        com.example.ime.toolbar.ToolbarTool.REDO,
+        com.example.ime.toolbar.ToolbarTool.SELECT_WORD,
+        com.example.ime.toolbar.ToolbarTool.SELECT_ALL,
+        com.example.ime.toolbar.ToolbarTool.COPY,
+        com.example.ime.toolbar.ToolbarTool.PASTE,
+        com.example.ime.toolbar.ToolbarTool.UP,
+        com.example.ime.toolbar.ToolbarTool.DOWN,
+        com.example.ime.toolbar.ToolbarTool.VOICE,
+        com.example.ime.toolbar.ToolbarTool.PROMPT_LIST,
+        com.example.ime.toolbar.ToolbarTool.SECURITY_VAULT,
+        com.example.ime.toolbar.ToolbarTool.DESKTOP_SHORTCUTS,
+        com.example.ime.toolbar.ToolbarTool.SETTINGS
+    )
+    var hidePinnedWhenExpanded: Boolean = true
+    var toolbarScrollOffset: Float = 0f
+    var maxToolbarScrollOffset: Float = 0f
+    val toolbarScrollBounds = RectF()
 
     fun buildLayout(width: Float, height: Float, theme: KeyboardTheme, density: Float, bottomInsetPx: Float = 0f) {
         keys.clear()
@@ -75,61 +104,101 @@ class KeyboardLayout {
     }
 
     private fun buildToolbar(startX: Float, startY: Float, totalWidth: Float, height: Float, density: Float) {
-        // Toolbar: [ > ] [ Suggestion 1 ] [ Suggestion 2 ] [ Suggestion 3 ] [ ⬚ ] [ 📋 ]
-        val expandBtnWidth = 36f * density
-        val toolBtnWidth = 36f * density
+        val anchorBtnWidth = 36f * density
         val spacing = 4f * density
-
         var currentX = startX
 
-        // 1. Expand action button
-        val expandKey = KeyData(
+        // 1. Left anchor button: Expand/Collapse Chevron OR Incognito Badge
+        val anchorLabel = if (isIncognitoActive) "🕶️" else (if (isToolbarExpanded) "‹" else "›")
+        val anchorKey = KeyData(
             code = -101,
-            label = "›",
+            label = anchorLabel,
             type = KeyType.ACTION_EXPAND,
             weight = 1f,
-            bounds = RectF(currentX, startY, currentX + expandBtnWidth, startY + height)
+            bounds = RectF(currentX, startY, currentX + anchorBtnWidth, startY + height)
         )
-        toolbarKeys.add(expandKey)
-        currentX += expandBtnWidth + spacing
+        toolbarKeys.add(anchorKey)
+        currentX += anchorBtnWidth + spacing
 
-        // 2. Trailing utility icons
-        val rightIconsTotalWidth = (toolBtnWidth * 2) + spacing
-        val suggestionAreaWidth = totalWidth - expandBtnWidth - spacing - rightIconsTotalWidth - spacing
-        val eachSugWidth = (suggestionAreaWidth - (spacing * (suggestions.size - 1).coerceAtLeast(0))) / suggestions.size.coerceAtLeast(1)
+        if (isToolbarExpanded) {
+            // EXPANDED TOOLBAR: Ensure touch targets are at least 42dp wide with horizontal scroll
+            val toolsToRender = expandedTools.ifEmpty {
+                listOf(
+                    com.example.ime.toolbar.ToolbarTool.UNDO,
+                    com.example.ime.toolbar.ToolbarTool.REDO,
+                    com.example.ime.toolbar.ToolbarTool.SELECT_WORD,
+                    com.example.ime.toolbar.ToolbarTool.COPY,
+                    com.example.ime.toolbar.ToolbarTool.PASTE,
+                    com.example.ime.toolbar.ToolbarTool.SETTINGS
+                )
+            }
 
-        for (sug in suggestions) {
-            val sugKey = KeyData(
-                code = -200,
-                label = sug,
-                type = KeyType.SUGGESTION,
-                weight = 1f,
-                bounds = RectF(currentX, startY, currentX + eachSugWidth, startY + height)
-            )
-            toolbarKeys.add(sugKey)
-            currentX += eachSugWidth + spacing
+            val remainingWidth = totalWidth - anchorBtnWidth - spacing
+            val minToolWidth = 42f * density
+            // If tools fit comfortably in remaining width, distribute them; otherwise use minToolWidth with scroll
+            val naturalWidth = (remainingWidth - (spacing * (toolsToRender.size - 1).coerceAtLeast(0))) / toolsToRender.size.coerceAtLeast(1)
+            val toolBtnWidth = naturalWidth.coerceAtLeast(minToolWidth)
+
+            val totalContentWidth = (toolBtnWidth * toolsToRender.size) + (spacing * (toolsToRender.size - 1).coerceAtLeast(0))
+            maxToolbarScrollOffset = (totalContentWidth - remainingWidth).coerceAtLeast(0f)
+            toolbarScrollOffset = toolbarScrollOffset.coerceIn(0f, maxToolbarScrollOffset)
+
+            toolbarScrollBounds.set(currentX, startY, currentX + remainingWidth, startY + height)
+
+            for ((idx, tool) in toolsToRender.withIndex()) {
+                val itemLeft = currentX + (idx * (toolBtnWidth + spacing))
+                val toolKey = KeyData(
+                    code = -300 - idx,
+                    label = "",
+                    type = KeyType.TOOLBAR_TOOL,
+                    weight = 1f,
+                    bounds = RectF(itemLeft, startY, itemLeft + toolBtnWidth, startY + height)
+                ).apply {
+                    this.tool = tool
+                }
+                toolbarKeys.add(toolKey)
+            }
+        } else {
+            toolbarScrollOffset = 0f
+            maxToolbarScrollOffset = 0f
+            toolbarScrollBounds.set(0f, 0f, 0f, 0f)
+
+            // COLLAPSED TOOLBAR: Left Anchor + Suggestions + Pinned Right Tools
+            val pinnedToRender = pinnedTools
+            val toolBtnWidth = 36f * density
+            val rightPinnedTotalWidth = if (pinnedToRender.isNotEmpty()) {
+                (toolBtnWidth * pinnedToRender.size) + (spacing * (pinnedToRender.size - 1))
+            } else 0f
+
+            val suggestionAreaWidth = totalWidth - anchorBtnWidth - spacing - (if (rightPinnedTotalWidth > 0) rightPinnedTotalWidth + spacing else 0f)
+            val eachSugWidth = (suggestionAreaWidth - (spacing * (suggestions.size - 1).coerceAtLeast(0))) / suggestions.size.coerceAtLeast(1)
+
+            for (sug in suggestions) {
+                val sugKey = KeyData(
+                    code = -200,
+                    label = sug,
+                    type = KeyType.SUGGESTION,
+                    weight = 1f,
+                    bounds = RectF(currentX, startY, currentX + eachSugWidth, startY + height)
+                )
+                toolbarKeys.add(sugKey)
+                currentX += eachSugWidth + spacing
+            }
+
+            for ((idx, tool) in pinnedToRender.withIndex()) {
+                val toolKey = KeyData(
+                    code = -400 - idx,
+                    label = "",
+                    type = KeyType.TOOLBAR_TOOL,
+                    weight = 1f,
+                    bounds = RectF(currentX, startY, currentX + toolBtnWidth, startY + height)
+                ).apply {
+                    this.tool = tool
+                }
+                toolbarKeys.add(toolKey)
+                currentX += toolBtnWidth + spacing
+            }
         }
-
-        // 3. Selection action
-        val selectionKey = KeyData(
-            code = -102,
-            label = "⬚",
-            type = KeyType.ACTION_SELECTION,
-            weight = 1f,
-            bounds = RectF(currentX, startY, currentX + toolBtnWidth, startY + height)
-        )
-        toolbarKeys.add(selectionKey)
-        currentX += toolBtnWidth + spacing
-
-        // 4. Clipboard action
-        val clipboardKey = KeyData(
-            code = -103,
-            label = "📋",
-            type = KeyType.ACTION_CLIPBOARD,
-            weight = 1f,
-            bounds = RectF(currentX, startY, currentX + toolBtnWidth, startY + height)
-        )
-        toolbarKeys.add(clipboardKey)
     }
 
     private fun getRowDefinitions(mode: KeyboardMode, shiftState: ShiftState): List<List<KeyData>> {
@@ -137,6 +206,7 @@ class KeyboardLayout {
             KeyboardMode.CHARACTERS -> getQwerty5Rows(shiftState)
             KeyboardMode.SYMBOLS_1 -> getSymbols1Rows()
             KeyboardMode.SYMBOLS_2 -> getSymbols2Rows()
+            KeyboardMode.NUMPAD -> getNumpadRows()
         }
     }
 
@@ -170,9 +240,9 @@ class KeyboardLayout {
             )
         }
 
-        // Row 1: Q-P with corner hint symbols
+        // Row 1: Q-P with corner hint symbols matching Screenshot 1
         val r1Chars = if (isCaps) listOf("Q","W","E","R","T","Y","U","I","O","P") else listOf("q","w","e","r","t","y","u","i","o","p")
-        val r1Hints = listOf("%", "\\", "|", "=", "[", "]", "-", "!", "_", ";")
+        val r1Hints = listOf("%", "/", "|", "=", "[", "]", "*", "!", "-", ";")
         val r1More = if (isCaps) {
             listOf(
                 listOf("Q"),
@@ -284,7 +354,7 @@ class KeyboardLayout {
         }
 
         val row3 = mutableListOf<KeyData>()
-        row3.add(KeyData(code = -1, label = shiftLabel, type = KeyType.SHIFT, weight = 1.5f))
+        row3.add(KeyData(code = -1, label = shiftLabel, type = KeyType.SHIFT, weight = 1.4f))
         for (i in r3Chars.indices) {
             row3.add(
                 KeyData(
@@ -297,7 +367,7 @@ class KeyboardLayout {
                 )
             )
         }
-        row3.add(KeyData(code = -2, label = "⌫", type = KeyType.DELETE, weight = 1.5f))
+        row3.add(KeyData(code = -2, label = "⌫", type = KeyType.DELETE, weight = 1.4f))
 
         // Row 4: ?123, Comma, Space, Period, Enter
         val row4 = listOf(
@@ -305,89 +375,155 @@ class KeyboardLayout {
             KeyData(
                 code = ','.code,
                 label = ",",
-                hintLabel = "⚙",
-                moreKeys = listOf(",", ";", ":", "⚙"),
+                hintLabel = "…",
+                moreKeys = listOf(",", ";", ":", "…"),
                 type = KeyType.COMMA,
                 weight = 1.0f
             ),
-            KeyData(code = 32, label = "", type = KeyType.SPACE, weight = 4.8f),
+            KeyData(code = 32, label = "", hintLabel = "…", type = KeyType.SPACE, weight = 4.6f),
             KeyData(
                 code = '.'.code,
                 label = ".",
-                hintLabel = "…",
                 moreKeys = listOf(".", "…", "!", "?", "-", "_"),
                 type = KeyType.PERIOD,
                 weight = 1.0f
             ),
-            KeyData(code = -4, label = "↵", type = KeyType.ENTER, weight = 1.6f)
+            KeyData(code = -4, label = "↵", hintLabel = "…", type = KeyType.ENTER, weight = 1.6f)
         )
 
         return listOf(row0, row1, row2, row3, row4)
     }
 
+    // Symbols Page 1 (Matching Screenshot 4)
     private fun getSymbols1Rows(): List<List<KeyData>> {
+        // Row 0: 1 2 3 4 5 6 7 8 9 0
         val r0 = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0").map {
             KeyData(code = it[0].code, label = it, type = KeyType.CHARACTER, weight = 1.0f)
         }
-        val r1 = listOf("@", "#", "$", "_", "&", "-", "+", "(", ")", "/").map {
-            val more = if (it == "$") listOf("$", "€", "£", "¥", "₹", "¢") else listOf(it)
-            KeyData(code = it[0].code, label = it, moreKeys = more, type = KeyType.CHARACTER, weight = 1.0f)
-        }
-        val r2 = listOf("*", "\"", "'", ":", ";", "!", "?", "%", "~", "`").map {
+        // Row 1: % / | = [ ] * ! - ; " (11 keys)
+        val r1 = listOf("%", "/", "|", "=", "[", "]", "*", "!", "-", ";", "\"").map {
             KeyData(code = it[0].code, label = it, type = KeyType.CHARACTER, weight = 1.0f)
         }
+        // Row 2: @ # ₹ _ & - + ( ) { } (11 keys)
+        val r2 = listOf("@", "#", "₹", "_", "&", "-", "+", "(", ")", "{", "}").map {
+            val more = if (it == "₹") listOf("₹", "$", "€", "£", "¥", "¢") else listOf(it)
+            KeyData(code = it[0].code, label = it, moreKeys = more, type = KeyType.CHARACTER, weight = 1.0f)
+        }
 
+        // Row 3: =\< * " ' : ; ! ? : ⌫
         val row3 = mutableListOf<KeyData>()
-        row3.add(KeyData(code = -5, label = "=\\<", type = KeyType.SYMBOLS_MORE_TOGGLE, weight = 1.5f))
-        val r3 = listOf("\\", "|", "<", ">", "{", "}", "[", "]")
+        row3.add(KeyData(code = -5, label = "=\\<", type = KeyType.SYMBOLS_MORE_TOGGLE, weight = 1.4f))
+        val r3 = listOf("*", "\"", "'", ":", ";", "!", "?", ":")
         for (ch in r3) {
             row3.add(KeyData(code = ch[0].code, label = ch, type = KeyType.CHARACTER, weight = 1.0f))
         }
-        row3.add(KeyData(code = -2, label = "⌫", type = KeyType.DELETE, weight = 1.5f))
+        row3.add(KeyData(code = -2, label = "⌫", type = KeyType.DELETE, weight = 1.4f))
 
+        // Row 4: ABC , 12/34 Space . ↵
         val row4 = listOf(
-            KeyData(code = -3, label = "ABC", type = KeyType.SYMBOLS_TOGGLE, weight = 1.4f),
-            KeyData(code = ','.code, label = ",", type = KeyType.COMMA, weight = 1.0f),
-            KeyData(code = 32, label = "", type = KeyType.SPACE, weight = 4.8f),
-            KeyData(code = '.'.code, label = ".", type = KeyType.PERIOD, weight = 1.0f),
-            KeyData(code = -4, label = "↵", type = KeyType.ENTER, weight = 1.6f)
+            KeyData(code = -3, label = "ABC", type = KeyType.SYMBOLS_TOGGLE, weight = 1.3f),
+            KeyData(code = ','.code, label = ",", hintLabel = "…", type = KeyType.COMMA, weight = 0.9f),
+            KeyData(code = -7, label = "12\n34", type = KeyType.NUMPAD_TOGGLE, weight = 0.9f),
+            KeyData(code = 32, label = "", hintLabel = "…", type = KeyType.SPACE, weight = 4.0f),
+            KeyData(code = '.'.code, label = ".", type = KeyType.PERIOD, weight = 0.9f),
+            KeyData(code = -4, label = "↵", hintLabel = "…", type = KeyType.ENTER, weight = 1.5f)
         )
 
         return listOf(r0, r1, r2, row3, row4)
     }
 
+    // Symbols Page 2 (Matching Screenshot 3)
     private fun getSymbols2Rows(): List<List<KeyData>> {
-        val r0 = listOf("~", "`", "|", "•", "√", "π", "÷", "×", "§", "Δ").map {
+        // Row 0: 1 2 3 4 5 6 7 8 9 0
+        val r0 = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0").map {
             KeyData(code = it[0].code, label = it, type = KeyType.CHARACTER, weight = 1.0f)
         }
-        val r1 = listOf("£", "€", "¥", "¢", "₹", "^", "°", "=", "{", "}").map {
+        // Row 1: ~ ` | • √ π ÷ × ¶ Δ
+        val r1 = listOf("~", "`", "|", "•", "√", "π", "÷", "×", "¶", "Δ").map {
             KeyData(code = it[0].code, label = it, type = KeyType.CHARACTER, weight = 1.0f)
         }
-        val r2 = listOf("\\", "<", ">", "©", "®", "™", "✓", "[", "]", "¿").map {
+        // Row 2: £ € $ ¢ ^ ° = { }
+        val r2 = listOf("£", "€", "$", "¢", "^", "°", "=", "{", "}").map {
             KeyData(code = it[0].code, label = it, type = KeyType.CHARACTER, weight = 1.0f)
         }
 
+        // Row 3: ?123 \ © ® ™ % [ ] ⌫
         val row3 = mutableListOf<KeyData>()
-        row3.add(KeyData(code = -6, label = "?123", type = KeyType.SYMBOLS_MORE_TOGGLE, weight = 1.5f))
-        val r3 = listOf("«", "»", "¡", "§", "±", "≠", "≤", "≥")
+        row3.add(KeyData(code = -6, label = "?123", type = KeyType.SYMBOLS_MORE_TOGGLE, weight = 1.4f))
+        val r3 = listOf("\\", "©", "®", "™", "%", "[", "]")
         for (ch in r3) {
             row3.add(KeyData(code = ch[0].code, label = ch, type = KeyType.CHARACTER, weight = 1.0f))
         }
-        row3.add(KeyData(code = -2, label = "⌫", type = KeyType.DELETE, weight = 1.5f))
+        row3.add(KeyData(code = -2, label = "⌫", type = KeyType.DELETE, weight = 1.4f))
 
+        // Row 4: ABC < Space > ↵
         val row4 = listOf(
             KeyData(code = -3, label = "ABC", type = KeyType.SYMBOLS_TOGGLE, weight = 1.4f),
             KeyData(code = '<'.code, label = "<", type = KeyType.CHARACTER, weight = 1.0f),
-            KeyData(code = 32, label = "", type = KeyType.SPACE, weight = 4.8f),
+            KeyData(code = 32, label = "", hintLabel = "…", type = KeyType.SPACE, weight = 4.6f),
             KeyData(code = '>'.code, label = ">", type = KeyType.CHARACTER, weight = 1.0f),
-            KeyData(code = -4, label = "↵", type = KeyType.ENTER, weight = 1.6f)
+            KeyData(code = -4, label = "↵", hintLabel = "…", type = KeyType.ENTER, weight = 1.6f)
         )
 
         return listOf(r0, r1, r2, row3, row4)
     }
 
+    // Dedicated 3x4 Numpad / Calculator Grid (Matching Screenshot 2)
+    private fun getNumpadRows(): List<List<KeyData>> {
+        // Row 0: +( , 1 , 2 , 3 , %₹
+        val row0 = listOf(
+            KeyData(code = '+'.code, label = "+", hintLabel = "(", moreKeys = listOf("+", "("), type = KeyType.CHARACTER, weight = 1.2f),
+            KeyData(code = '1'.code, label = "1", type = KeyType.CHARACTER, weight = 1.4f),
+            KeyData(code = '2'.code, label = "2", type = KeyType.CHARACTER, weight = 1.4f),
+            KeyData(code = '3'.code, label = "3", type = KeyType.CHARACTER, weight = 1.4f),
+            KeyData(code = '%'.code, label = "%", hintLabel = "₹", moreKeys = listOf("%", "₹", "$"), type = KeyType.CHARACTER, weight = 1.2f)
+        )
+
+        // Row 1: -) , 4 , 5 , 6 , _
+        val row1 = listOf(
+            KeyData(code = '-'.code, label = "-", hintLabel = ")", moreKeys = listOf("-", ")"), type = KeyType.CHARACTER, weight = 1.2f),
+            KeyData(code = '4'.code, label = "4", type = KeyType.CHARACTER, weight = 1.4f),
+            KeyData(code = '5'.code, label = "5", type = KeyType.CHARACTER, weight = 1.4f),
+            KeyData(code = '6'.code, label = "6", type = KeyType.CHARACTER, weight = 1.4f),
+            KeyData(code = '_'.code, label = "_", type = KeyType.CHARACTER, weight = 1.2f)
+        )
+
+        // Row 2: */ , 7 , 8 , 9 , ⌫
+        val row2 = listOf(
+            KeyData(code = '*'.code, label = "*", hintLabel = "/", moreKeys = listOf("*", "/"), type = KeyType.CHARACTER, weight = 1.2f),
+            KeyData(code = '7'.code, label = "7", type = KeyType.CHARACTER, weight = 1.4f),
+            KeyData(code = '8'.code, label = "8", type = KeyType.CHARACTER, weight = 1.4f),
+            KeyData(code = '9'.code, label = "9", type = KeyType.CHARACTER, weight = 1.4f),
+            KeyData(code = -2, label = "⌫", type = KeyType.DELETE, weight = 1.2f)
+        )
+
+        // Row 3: ABC , , , 0 , ?123 , =# , :: , ↵
+        val row3 = listOf(
+            KeyData(code = -3, label = "ABC", type = KeyType.SYMBOLS_TOGGLE, weight = 1.2f),
+            KeyData(code = ','.code, label = ",", hintLabel = "…", type = KeyType.COMMA, weight = 1.0f),
+            KeyData(code = -3, label = "?123", type = KeyType.SYMBOLS_TOGGLE, weight = 1.0f),
+            KeyData(code = '0'.code, label = "0", type = KeyType.CHARACTER, weight = 1.4f),
+            KeyData(code = '='.code, label = "=", hintLabel = "#", moreKeys = listOf("=", "#"), type = KeyType.CHARACTER, weight = 1.0f),
+            KeyData(code = ':'.code, label = ":", hintLabel = ":", type = KeyType.CHARACTER, weight = 0.8f),
+            KeyData(code = -4, label = "↵", hintLabel = "…", type = KeyType.ENTER, weight = 1.4f)
+        )
+
+        return listOf(row0, row1, row2, row3)
+    }
+
     fun findKeyAt(x: Float, y: Float): KeyData? {
-        return keys.firstOrNull { it.bounds.contains(x, y) }
-            ?: toolbarKeys.firstOrNull { it.bounds.contains(x, y) }
+        val keyHit = keys.firstOrNull { it.bounds.contains(x, y) }
+        if (keyHit != null) return keyHit
+
+        // Toolbar hit testing
+        val anchorHit = toolbarKeys.firstOrNull { it.type == KeyType.ACTION_EXPAND && it.bounds.contains(x, y) }
+        if (anchorHit != null) return anchorHit
+
+        if (isToolbarExpanded && toolbarScrollBounds.contains(x, y)) {
+            val adjustedX = x + toolbarScrollOffset
+            return toolbarKeys.firstOrNull { it.type == KeyType.TOOLBAR_TOOL && it.bounds.contains(adjustedX, y) }
+        }
+
+        return toolbarKeys.firstOrNull { it.bounds.contains(x, y) }
     }
 }

@@ -8,6 +8,7 @@ enum class KeyType {
     DELETE,
     SYMBOLS_TOGGLE,
     SYMBOLS_MORE_TOGGLE,
+    NUMPAD_TOGGLE,
     SPACE,
     ENTER,
     COMMA,
@@ -15,7 +16,8 @@ enum class KeyType {
     ACTION_EXPAND,
     ACTION_SELECTION,
     ACTION_CLIPBOARD,
-    SUGGESTION
+    SUGGESTION,
+    TOOLBAR_TOOL
 }
 
 data class KeyData(
@@ -26,5 +28,6 @@ data class KeyData(
     val type: KeyType = KeyType.CHARACTER,
     val weight: Float = 1.0f,
     val bounds: RectF = RectF(),
-    var isPressed: Boolean = false
+    var isPressed: Boolean = false,
+    var tool: com.example.ime.toolbar.ToolbarTool? = null
 )

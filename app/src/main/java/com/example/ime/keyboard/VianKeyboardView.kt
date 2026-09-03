@@ -2,6 +2,7 @@ package com.example.ime.keyboard
 
 import android.content.Context
 import android.graphics.*
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -9,6 +10,10 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowInsets
+import androidx.core.content.ContextCompat
+import com.example.R
+import com.example.ime.toolbar.ToolbarPreferences
+import com.example.ime.toolbar.ToolbarTool
 
 class VianKeyboardView @JvmOverloads constructor(
     context: Context,
@@ -20,6 +25,8 @@ class VianKeyboardView @JvmOverloads constructor(
         set(value) {
             field = value
             updatePaints()
+            val density = resources.displayMetrics.density
+            layout.buildLayout(width.toFloat(), height.toFloat(), theme, density, bottomNavInsetPx)
             requestLayout()
             invalidate()
         }
@@ -30,6 +37,22 @@ class VianKeyboardView @JvmOverloads constructor(
     var onActionExpand: (() -> Unit)? = null
     var onActionSelection: (() -> Unit)? = null
     var onActionClipboard: (() -> Unit)? = null
+
+    // Toolbar tool callbacks
+    var onToolbarToolClick: ((ToolbarTool) -> Unit)? = null
+    var onToolbarToolLongClick: ((ToolbarTool) -> Unit)? = null
+    var onAnchorLongClick: (() -> Unit)? = null
+    var onCommaPopupSelected: ((String) -> Unit)? = null
+
+    private val toolbarPrefs = ToolbarPreferences(context)
+    private val iconCache = mutableMapOf<Int, Drawable>()
+    private var isLongPressTriggered = false
+
+    // Horizontal scroll tracking for expanded toolbar
+    private var isToolbarScrolling = false
+    private var toolbarTouchStartX = 0f
+    private var toolbarInitialScrollOffset = 0f
+    private val touchSlop = android.view.ViewConfiguration.get(context).scaledTouchSlop.toFloat()
 
     private val popupWindow = KeyPopupWindow(context)
 
@@ -45,7 +68,7 @@ class VianKeyboardView @JvmOverloads constructor(
     }
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
-        typeface = Typeface.DEFAULT_BOLD
+        typeface = Typeface.DEFAULT
     }
     private val actionTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
@@ -53,7 +76,7 @@ class VianKeyboardView @JvmOverloads constructor(
     }
     private val enterTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
-        typeface = Typeface.DEFAULT_BOLD
+        typeface = Typeface.DEFAULT
     }
     private val hintPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.RIGHT
@@ -64,10 +87,48 @@ class VianKeyboardView @JvmOverloads constructor(
         typeface = Typeface.DEFAULT_BOLD
     }
 
+    // Vector Icon Paints
+    private val iconStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeCap = Paint.Cap.ROUND
+        strokeJoin = Paint.Join.ROUND
+    }
+    private val iconFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+    }
+    private val enterIconStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeCap = Paint.Cap.ROUND
+        strokeJoin = Paint.Join.ROUND
+    }
+    private val enterIconFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+    }
+    private val pathHelper = Path()
+
     private var activePressedKey: KeyData? = null
     private var lastShiftPressTime = 0L
     private var isMultiPopupActive = false
+    private var isCommaGridPopupActive = false
     private var bottomNavInsetPx = 0f
+
+    // Comma popup item definitions (10 items across 2 rows)
+    private val commaPopupItems = listOf(
+        "Settings", "Emoji", "Clipboard", "Log Keeper", "Shortcuts",
+        "Voice", "One Hand", "Floating", "Personal Vault", "Security Vault"
+    )
+    private val commaPopupIcons = listOf(
+        R.drawable.ic_settings,
+        R.drawable.ic_emoji_smileys,
+        R.drawable.ic_clipboard,
+        R.drawable.ic_log_keeper,
+        R.drawable.ic_desktop_shortcuts,
+        R.drawable.ic_mic,
+        R.drawable.ic_one_hand,
+        R.drawable.ic_floating_keyboard,
+        R.drawable.ic_personal_vault,
+        R.drawable.ic_security_vault
+    )
 
     // Long-press and repeat handler
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -87,6 +148,26 @@ class VianKeyboardView @JvmOverloads constructor(
         activePressedKey?.let { key ->
             if (key.type == KeyType.DELETE) {
                 mainHandler.post(repeatBackspaceRunnable)
+            } else if (key.type == KeyType.ACTION_EXPAND) {
+                isLongPressTriggered = true
+                onAnchorLongClick?.invoke()
+            } else if (key.type == KeyType.TOOLBAR_TOOL) {
+                key.tool?.let { tool ->
+                    isLongPressTriggered = true
+                    onToolbarToolLongClick?.invoke(tool)
+                }
+            } else if (key.type == KeyType.COMMA) {
+                isLongPressTriggered = true
+                isCommaGridPopupActive = true
+                popupWindow.showGridKeys(
+                    anchor = this@VianKeyboardView,
+                    key = key,
+                    items = commaPopupItems,
+                    iconResIds = commaPopupIcons,
+                    cols = 5,
+                    rows = 2,
+                    theme = theme
+                )
             } else if (key.moreKeys.isNotEmpty()) {
                 isMultiPopupActive = true
                 popupWindow.showMoreKeys(this@VianKeyboardView, key, key.moreKeys, theme)
@@ -96,6 +177,9 @@ class VianKeyboardView @JvmOverloads constructor(
 
     init {
         setLayerType(LAYER_TYPE_HARDWARE, null)
+        layout.pinnedTools = toolbarPrefs.getPinnedTools()
+        layout.expandedTools = toolbarPrefs.getExpandedTools()
+        layout.hidePinnedWhenExpanded = toolbarPrefs.hidePinnedWhenExpanded
         updatePaints()
 
         setOnApplyWindowInsetsListener { _, insets ->
@@ -128,7 +212,7 @@ class VianKeyboardView @JvmOverloads constructor(
         textPaint.textSize = 21f * density
 
         actionTextPaint.color = theme.textColor
-        actionTextPaint.textSize = 15f * density
+        actionTextPaint.textSize = 14f * density
 
         enterTextPaint.color = theme.enterTextColor
         enterTextPaint.textSize = 18f * density
@@ -138,19 +222,39 @@ class VianKeyboardView @JvmOverloads constructor(
 
         toolbarTextPaint.color = theme.textColor
         toolbarTextPaint.textSize = 14.5f * density
+
+        iconStrokePaint.color = theme.textColor
+        iconStrokePaint.strokeWidth = 2.2f * density
+
+        iconFillPaint.color = theme.textColor
+
+        enterIconStrokePaint.color = theme.enterTextColor
+        enterIconStrokePaint.strokeWidth = 2.4f * density
+
+        enterIconFillPaint.color = theme.enterTextColor
     }
 
     fun reloadTheme() {
         theme = KeyboardTheme.loadFromPrefs(context)
+        reloadToolbarConfiguration()
+    }
+
+    fun reloadToolbarConfiguration() {
+        layout.pinnedTools = toolbarPrefs.getPinnedTools()
+        layout.expandedTools = toolbarPrefs.getExpandedTools()
+        layout.hidePinnedWhenExpanded = toolbarPrefs.hidePinnedWhenExpanded
+        val density = resources.displayMetrics.density
+        layout.buildLayout(width.toFloat(), height.toFloat(), theme, density, bottomNavInsetPx)
+        invalidate()
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val width = MeasureSpec.getSize(widthMeasureSpec)
         val density = resources.displayMetrics.density
-        // 5 rows + toolbar + vertical gaps + padding + system navigation bar inset
-        val rowsTotalHeight = (theme.keyHeightDp * 5 * density)
+        val rowCount = if (layout.mode == KeyboardMode.NUMPAD) 4 else 5
+        val rowsTotalHeight = (theme.keyHeightDp * rowCount * density)
         val toolbarHeight = (theme.toolbarHeightDp * density)
-        val gapsHeight = (theme.verticalGapDp * 5 * density)
+        val gapsHeight = (theme.verticalGapDp * rowCount * density)
         val paddingHeight = (12f * density)
         val totalCalculatedHeight = (rowsTotalHeight + toolbarHeight + gapsHeight + paddingHeight + bottomNavInsetPx).toInt()
         val height = totalCalculatedHeight.coerceAtLeast((260 * density).toInt())
@@ -173,12 +277,72 @@ class VianKeyboardView @JvmOverloads constructor(
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), backgroundPaint)
 
         // 2. Draw Top Toolbar Items
-        for (key in layout.toolbarKeys) {
-            val bgPaint = if (key.isPressed) pressedKeyPaint else toolbarBackgroundPaint
-            canvas.drawRoundRect(key.bounds, cornerRadius, cornerRadius, bgPaint)
+        if (layout.isToolbarExpanded && layout.toolbarScrollBounds.width() > 0) {
+            // A. Draw Anchor Key first (fixed, non-scrolling)
+            val anchorKey = layout.toolbarKeys.firstOrNull { it.type == KeyType.ACTION_EXPAND }
+            if (anchorKey != null) {
+                val bgPaint = if (anchorKey.isPressed) pressedKeyPaint else toolbarBackgroundPaint
+                canvas.drawRoundRect(anchorKey.bounds, cornerRadius, cornerRadius, bgPaint)
+                if (layout.isIncognitoActive) {
+                    val badgeRadius = minOf(anchorKey.bounds.width(), anchorKey.bounds.height()) / 2f
+                    val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = Color.parseColor("#334155")
+                    }
+                    canvas.drawCircle(anchorKey.bounds.centerX(), anchorKey.bounds.centerY(), badgeRadius * 0.85f, badgePaint)
+                    drawVectorIcon(canvas, anchorKey.bounds, R.drawable.ic_incognito, 18f * density, Color.WHITE)
+                } else {
+                    val textY = anchorKey.bounds.centerY() - ((toolbarTextPaint.descent() + toolbarTextPaint.ascent()) / 2)
+                    canvas.drawText(anchorKey.label, anchorKey.bounds.centerX(), textY, toolbarTextPaint)
+                }
+            }
 
-            val textY = key.bounds.centerY() - ((toolbarTextPaint.descent() + toolbarTextPaint.ascent()) / 2)
-            canvas.drawText(key.label, key.bounds.centerX(), textY, toolbarTextPaint)
+            // B. Clip and translate scrollable tools tray
+            canvas.save()
+            canvas.clipRect(layout.toolbarScrollBounds)
+            canvas.translate(-layout.toolbarScrollOffset, 0f)
+
+            for (key in layout.toolbarKeys) {
+                if (key.type == KeyType.ACTION_EXPAND) continue
+                val bgPaint = if (key.isPressed) pressedKeyPaint else toolbarBackgroundPaint
+                canvas.drawRoundRect(key.bounds, cornerRadius, cornerRadius, bgPaint)
+
+                if (key.type == KeyType.TOOLBAR_TOOL) {
+                    key.tool?.let { tool ->
+                        drawVectorIcon(canvas, key.bounds, tool.iconResId, 20f * density, theme.textColor)
+                    }
+                } else {
+                    val textY = key.bounds.centerY() - ((toolbarTextPaint.descent() + toolbarTextPaint.ascent()) / 2)
+                    canvas.drawText(key.label, key.bounds.centerX(), textY, toolbarTextPaint)
+                }
+            }
+            canvas.restore()
+        } else {
+            for (key in layout.toolbarKeys) {
+                val bgPaint = if (key.isPressed) pressedKeyPaint else toolbarBackgroundPaint
+                canvas.drawRoundRect(key.bounds, cornerRadius, cornerRadius, bgPaint)
+
+                if (key.type == KeyType.ACTION_EXPAND) {
+                    if (layout.isIncognitoActive) {
+                        // Draw Incognito Pill / Badge with sunglasses & hat icon
+                        val badgeRadius = minOf(key.bounds.width(), key.bounds.height()) / 2f
+                        val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                            color = Color.parseColor("#334155")
+                        }
+                        canvas.drawCircle(key.bounds.centerX(), key.bounds.centerY(), badgeRadius * 0.85f, badgePaint)
+                        drawVectorIcon(canvas, key.bounds, R.drawable.ic_incognito, 18f * density, Color.WHITE)
+                    } else {
+                        val textY = key.bounds.centerY() - ((toolbarTextPaint.descent() + toolbarTextPaint.ascent()) / 2)
+                        canvas.drawText(key.label, key.bounds.centerX(), textY, toolbarTextPaint)
+                    }
+                } else if (key.type == KeyType.TOOLBAR_TOOL) {
+                    key.tool?.let { tool ->
+                        drawVectorIcon(canvas, key.bounds, tool.iconResId, 20f * density, theme.textColor)
+                    }
+                } else {
+                    val textY = key.bounds.centerY() - ((toolbarTextPaint.descent() + toolbarTextPaint.ascent()) / 2)
+                    canvas.drawText(key.label, key.bounds.centerX(), textY, toolbarTextPaint)
+                }
+            }
         }
 
         // 3. Draw Main Keys
@@ -193,22 +357,62 @@ class VianKeyboardView @JvmOverloads constructor(
                 else -> keyBackgroundPaint
             }
 
-            // Key background rect
-            canvas.drawRoundRect(key.bounds, cornerRadius, cornerRadius, currentBgPaint)
+            // Determine corner radius: special functional keys are noticeably rounder (capsule/stadium curves) matching HeliBoard & screenshot
+            val isSpecialKey = key.type == KeyType.SHIFT ||
+                               key.type == KeyType.SYMBOLS_TOGGLE ||
+                               key.type == KeyType.SYMBOLS_MORE_TOGGLE ||
+                               key.type == KeyType.NUMPAD_TOGGLE ||
+                               key.type == KeyType.COMMA ||
+                               key.type == KeyType.PERIOD ||
+                               key.type == KeyType.DELETE ||
+                               key.type == KeyType.ENTER
+
+            val currentRadius = if (isSpecialKey) {
+                // Rounder stadium radius, up to half the key height/width
+                (cornerRadius * 1.85f).coerceAtMost(minOf(key.bounds.width(), key.bounds.height()) / 2f)
+            } else {
+                cornerRadius
+            }
+
+            // Key background rect with customizable corner radius
+            canvas.drawRoundRect(key.bounds, currentRadius, currentRadius, currentBgPaint)
 
             // Key border if set
             if (hasBorder) {
-                canvas.drawRoundRect(key.bounds, cornerRadius, cornerRadius, borderPaint)
+                canvas.drawRoundRect(key.bounds, currentRadius, currentRadius, borderPaint)
             }
 
-            // Key label
-            val textY = key.bounds.centerY() - ((textPaint.descent() + textPaint.ascent()) / 2)
-            val paintToUse = when {
-                isEnter -> enterTextPaint
-                key.type == KeyType.CHARACTER || key.type == KeyType.SPACE || key.type == KeyType.COMMA || key.type == KeyType.PERIOD -> textPaint
-                else -> actionTextPaint
+            // Key label or custom vector icon
+            when (key.type) {
+                KeyType.DELETE -> {
+                    drawBackspaceIcon(canvas, key.bounds, density)
+                }
+                KeyType.SHIFT -> {
+                    drawShiftChevronIcon(canvas, key.bounds, density, layout.shiftState)
+                }
+                KeyType.ENTER -> {
+                    drawEnterReturnIcon(canvas, key.bounds, density)
+                }
+                else -> {
+                    val paintToUse = when {
+                        key.type == KeyType.CHARACTER || key.type == KeyType.SPACE || key.type == KeyType.COMMA || key.type == KeyType.PERIOD -> textPaint
+                        else -> actionTextPaint
+                    }
+
+                    if (key.label.contains("\n")) {
+                        val lines = key.label.split("\n")
+                        val totalH = (lines.size * 12f * density)
+                        var lineY = key.bounds.centerY() - (totalH / 2) + (8f * density)
+                        for (line in lines) {
+                            canvas.drawText(line, key.bounds.centerX(), lineY, paintToUse)
+                            lineY += (12f * density)
+                        }
+                    } else {
+                        val textY = key.bounds.centerY() - ((paintToUse.descent() + paintToUse.ascent()) / 2)
+                        canvas.drawText(key.label, key.bounds.centerX(), textY, paintToUse)
+                    }
+                }
             }
-            canvas.drawText(key.label, key.bounds.centerX(), textY, paintToUse)
 
             // Hint label (top right corner)
             if (theme.showHints && key.hintLabel != null) {
@@ -225,12 +429,18 @@ class VianKeyboardView @JvmOverloads constructor(
 
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                isLongPressTriggered = false
+                isToolbarScrolling = false
+                toolbarTouchStartX = x
+                toolbarInitialScrollOffset = layout.toolbarScrollOffset
+
                 val key = layout.findKeyAt(x, y)
                 if (key != null) {
                     activePressedKey = key
                     key.isPressed = true
                     isRepeatingBackspace = false
                     isMultiPopupActive = false
+                    isCommaGridPopupActive = false
 
                     // Show single popup bubble via PopupWindow (Option C)
                     if (theme.showPopups && (key.type == KeyType.CHARACTER || key.type == KeyType.COMMA || key.type == KeyType.PERIOD)) {
@@ -244,9 +454,29 @@ class VianKeyboardView @JvmOverloads constructor(
             }
 
             MotionEvent.ACTION_MOVE -> {
-                if (isMultiPopupActive) {
-                    popupWindow.updateSelection(event.rawX)
+                if (isCommaGridPopupActive) {
+                    popupWindow.updateSelection(event.rawX, event.rawY)
+                } else if (isMultiPopupActive) {
+                    popupWindow.updateSelection(event.rawX, event.rawY)
                 } else {
+                    // Check if dragging/scrolling on the expanded toolbar
+                    if (layout.isToolbarExpanded && layout.toolbarScrollBounds.contains(toolbarTouchStartX, y) && layout.maxToolbarScrollOffset > 0f) {
+                        val deltaX = x - toolbarTouchStartX
+                        if (isToolbarScrolling || Math.abs(deltaX) > touchSlop) {
+                            isToolbarScrolling = true
+                            mainHandler.removeCallbacks(longPressRunnable)
+                            activePressedKey?.isPressed = false
+                            activePressedKey = null
+
+                            val newOffset = (toolbarInitialScrollOffset - deltaX).coerceIn(0f, layout.maxToolbarScrollOffset)
+                            if (newOffset != layout.toolbarScrollOffset) {
+                                layout.toolbarScrollOffset = newOffset
+                                invalidate()
+                            }
+                            return true
+                        }
+                    }
+
                     val key = layout.findKeyAt(x, y)
                     if (key != activePressedKey) {
                         activePressedKey?.isPressed = false
@@ -270,14 +500,27 @@ class VianKeyboardView @JvmOverloads constructor(
                 mainHandler.removeCallbacks(longPressRunnable)
                 mainHandler.removeCallbacks(repeatBackspaceRunnable)
 
-                if (isMultiPopupActive) {
+                if (isToolbarScrolling) {
+                    isToolbarScrolling = false
+                    activePressedKey?.isPressed = false
+                    activePressedKey = null
+                    invalidate()
+                    return true
+                }
+
+                if (isCommaGridPopupActive) {
+                    val selected = popupWindow.getSelectedItem()
+                    if (!selected.isNullOrEmpty()) {
+                        onCommaPopupSelected?.invoke(selected)
+                    }
+                } else if (isMultiPopupActive) {
                     val selected = popupWindow.getSelectedItem()
                     if (!selected.isNullOrEmpty()) {
                         onTextCommit?.invoke(selected)
                     }
                 } else {
                     val key = activePressedKey
-                    if (key != null && !isRepeatingBackspace) {
+                    if (key != null && !isRepeatingBackspace && !isLongPressTriggered) {
                         handleKeySelection(key)
                     }
                 }
@@ -287,6 +530,7 @@ class VianKeyboardView @JvmOverloads constructor(
                 activePressedKey = null
                 isRepeatingBackspace = false
                 isMultiPopupActive = false
+                isCommaGridPopupActive = false
                 invalidate()
                 return true
             }
@@ -299,6 +543,8 @@ class VianKeyboardView @JvmOverloads constructor(
                 activePressedKey = null
                 isRepeatingBackspace = false
                 isMultiPopupActive = false
+                isCommaGridPopupActive = false
+                isToolbarScrolling = false
                 invalidate()
                 return true
             }
@@ -337,6 +583,17 @@ class VianKeyboardView @JvmOverloads constructor(
                 invalidate()
             }
 
+            KeyType.NUMPAD_TOGGLE -> {
+                layout.mode = KeyboardMode.NUMPAD
+                val density = resources.displayMetrics.density
+                layout.buildLayout(width.toFloat(), height.toFloat(), theme, density, bottomNavInsetPx)
+                invalidate()
+            }
+
+            KeyType.TOOLBAR_TOOL -> {
+                key.tool?.let { onToolbarToolClick?.invoke(it) }
+            }
+
             KeyType.ACTION_EXPAND -> {
                 onActionExpand?.invoke()
             }
@@ -369,5 +626,140 @@ class VianKeyboardView @JvmOverloads constructor(
     override fun onDetachedFromWindow() {
         popupWindow.dismiss()
         super.onDetachedFromWindow()
+    }
+
+    // Vector Icon Renderers (Matching HeliBoard & Screenshot)
+
+    /**
+     * Backspace Tag Icon (⌫):
+     * Pointed tag outline pointing to the left with a centered '✕'
+     */
+    private fun drawBackspaceIcon(canvas: Canvas, bounds: RectF, density: Float) {
+        val iconW = 20f * density
+        val iconH = 14f * density
+        val cx = bounds.centerX()
+        val cy = bounds.centerY()
+        val left = cx - (iconW / 2)
+        val top = cy - (iconH / 2)
+        val right = cx + (iconW / 2)
+        val bottom = cy + (iconH / 2)
+        val arrowW = 6.5f * density
+
+        pathHelper.reset()
+        pathHelper.moveTo(left, cy)
+        pathHelper.lineTo(left + arrowW, top)
+        pathHelper.lineTo(right, top)
+        pathHelper.lineTo(right, bottom)
+        pathHelper.lineTo(left + arrowW, bottom)
+        pathHelper.close()
+        canvas.drawPath(pathHelper, iconStrokePaint)
+
+        // Draw inner ✕
+        val crossHalf = 3.2f * density
+        val crossCx = cx + (arrowW * 0.28f)
+        canvas.drawLine(crossCx - crossHalf, cy - crossHalf, crossCx + crossHalf, cy + crossHalf, iconStrokePaint)
+        canvas.drawLine(crossCx + crossHalf, cy - crossHalf, crossCx - crossHalf, cy + crossHalf, iconStrokePaint)
+    }
+
+    /**
+     * Shift Chevron Icon:
+     * Clean upward chevron (^).
+     * OFF: stroke outline matching text
+     * ON: illuminated / thicker stroke or accent fill
+     * CAPS_LOCK: illuminated chevron with horizontal lock underline
+     */
+    private fun drawShiftChevronIcon(canvas: Canvas, bounds: RectF, density: Float, state: ShiftState) {
+        val chevronW = 14f * density
+        val chevronH = 8.5f * density
+        val cx = bounds.centerX()
+        val cy = bounds.centerY() - (if (state == ShiftState.CAPS_LOCK) 2f * density else 0f)
+
+        val left = cx - (chevronW / 2)
+        val right = cx + (chevronW / 2)
+        val top = cy - (chevronH / 2)
+        val bottom = cy + (chevronH / 2)
+
+        when (state) {
+            ShiftState.OFF -> {
+                pathHelper.reset()
+                pathHelper.moveTo(left, bottom)
+                pathHelper.lineTo(cx, top)
+                pathHelper.lineTo(right, bottom)
+                canvas.drawPath(pathHelper, iconStrokePaint)
+            }
+            ShiftState.ON -> {
+                // Active single shift - illuminated bold chevron
+                val activePaint = Paint(iconStrokePaint).apply {
+                    color = theme.accentColor
+                    strokeWidth = 3.2f * density
+                }
+                pathHelper.reset()
+                pathHelper.moveTo(left, bottom)
+                pathHelper.lineTo(cx, top)
+                pathHelper.lineTo(right, bottom)
+                canvas.drawPath(pathHelper, activePaint)
+            }
+            ShiftState.CAPS_LOCK -> {
+                // Caps Lock - illuminated chevron with lock bar underneath
+                val lockPaint = Paint(iconStrokePaint).apply {
+                    color = theme.accentColor
+                    strokeWidth = 3.0f * density
+                }
+                pathHelper.reset()
+                pathHelper.moveTo(left, bottom)
+                pathHelper.lineTo(cx, top)
+                pathHelper.lineTo(right, bottom)
+                canvas.drawPath(pathHelper, lockPaint)
+
+                // Lock horizontal bar beneath chevron
+                val barY = bottom + (5f * density)
+                canvas.drawLine(cx - (5.5f * density), barY, cx + (5.5f * density), barY, lockPaint)
+            }
+        }
+    }
+
+    /**
+     * Enter / Return Elbow Icon (↵):
+     * White return path entering from right, going left, ending in arrow
+     */
+    private fun drawEnterReturnIcon(canvas: Canvas, bounds: RectF, density: Float) {
+        val iconW = 18f * density
+        val iconH = 13f * density
+        val cx = bounds.centerX()
+        val cy = bounds.centerY()
+
+        val left = cx - (iconW / 2)
+        val right = cx + (iconW / 2)
+        val top = cy - (iconH / 2)
+        val bottom = cy + (iconH / 2)
+        val arrowSize = 4.5f * density
+
+        pathHelper.reset()
+        // Start top right, come down, turn left
+        pathHelper.moveTo(right, top)
+        pathHelper.lineTo(right, bottom)
+        pathHelper.lineTo(left, bottom)
+        canvas.drawPath(pathHelper, enterIconStrokePaint)
+
+        // Draw left arrow head
+        pathHelper.reset()
+        pathHelper.moveTo(left, bottom)
+        pathHelper.lineTo(left + arrowSize, bottom - arrowSize)
+        pathHelper.moveTo(left, bottom)
+        pathHelper.lineTo(left + arrowSize, bottom + arrowSize)
+        canvas.drawPath(pathHelper, enterIconStrokePaint)
+    }
+
+    private fun drawVectorIcon(canvas: Canvas, bounds: RectF, resId: Int, sizePx: Float, tintColor: Int) {
+        val drawable = iconCache.getOrPut(resId) {
+            ContextCompat.getDrawable(context, resId) ?: return
+        }
+        val left = (bounds.centerX() - (sizePx / 2f)).toInt()
+        val top = (bounds.centerY() - (sizePx / 2f)).toInt()
+        val right = (left + sizePx).toInt()
+        val bottom = (top + sizePx).toInt()
+        drawable.setBounds(left, top, right, bottom)
+        drawable.setTint(tintColor)
+        drawable.draw(canvas)
     }
 }

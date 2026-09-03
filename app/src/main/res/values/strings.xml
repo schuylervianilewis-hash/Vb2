@@ -5,4 +5,34 @@
     <string name="settings_title">Vian Board Settings</string>
     <string name="enable_keyboard_prompt">Enable Vian Board in System Settings</string>
     <string name="select_keyboard_prompt">Select Vian Board as Input Method</string>
+
+    <!-- Layout Customization -->
+    <string name="layout_customization_title">Layout Customization</string>
+    <string name="layout_customization_desc">Customize appearance, toolbar tools, and desktop shortcuts</string>
+    <string name="appearance_title">Appearance</string>
+    <string name="appearance_desc">Themes, key height, grayish tones, and corner radius</string>
+    <string name="toolbar_settings_title">Toolbar</string>
+    <string name="toolbar_settings_desc">Configure chevron tools and right-pinned keys</string>
+    <string name="desktop_shortcuts_settings_title">Desktop Shortcuts</string>
+    <string name="desktop_shortcuts_settings_desc">Configure 5 to 7 fat action buttons</string>
+    <string name="prompt_list_settings_title">Prompt List</string>
+    <string name="prompt_list_settings_desc">Manage reusable prompt templates and snippets</string>
+    <string name="security_settings_title">Security</string>
+    <string name="security_settings_desc">Pattern unlock, personal vault, and security vault</string>
+
+    <!-- Toolbar Tools -->
+    <string name="tool_incognito">Force incognito mode</string>
+    <string name="tool_undo">Undo</string>
+    <string name="tool_redo">Redo</string>
+    <string name="tool_select_word">Select word</string>
+    <string name="tool_select_all">Select all</string>
+    <string name="tool_copy">Copy</string>
+    <string name="tool_paste">Paste</string>
+    <string name="tool_up">Go up</string>
+    <string name="tool_down">Go down</string>
+    <string name="tool_voice">Voice input</string>
+    <string name="tool_prompt_list">Prompt list</string>
+    <string name="tool_security_vault">Security vault</string>
+    <string name="tool_desktop_shortcuts">Desktop shortcuts</string>
+    <string name="tool_settings">Settings</string>
 </resources>

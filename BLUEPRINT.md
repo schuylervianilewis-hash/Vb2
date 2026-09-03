@@ -106,7 +106,7 @@
 | **`[ 📋 ]` Paste / Clipboard** | Paste from clipboard | **Open Clipboard Manager Modal** |
 | **`[ 🕵️ ]` Incognito Mode** | Toggle Incognito On/Off | **5-Minute Temporary Incognito Mode** (Auto-reverts on timer) |
 | **`[ 12 34 ]` Key (?123)** | Switch to Numpad Mode | **Open Security Vault (Placeholder)** |
-| **`[ , ... ]` (Comma Key)** | Inserts comma `,` | **2-Row Menu Popup:**<br>1. 📋 Clipboard<br>2. ⚙️ Settings<br>3. 🪵 Log Keeper (OG Logger)<br>4. 🛡️ Security Vault *(Placeholder)*<br>5. 🗄️ Personal Vault *(Placeholder)*<br>6. 💬 Prompt List *(Placeholder)*<br>7. 🗚 One-Handed *(Placeholder)*<br>8. 🎤 Voice Input *(Placeholder)* |
+| **`[ , ... ]` (Comma Key)** | Inserts comma `,` | **2-Row Menu Popup (10 items, 5 per row):**<br>Row 1: ⚙️ Settings, 😊 Emoji, 📋 Clipboard, 🪵 Log Keeper (OG Logger), 🖥️ Desktop Shortcuts<br>Row 2: 🎤 Voice Input *(Placeholder)*, 🖐️ One Hand *(Placeholder)*, 🪟 Floating Keyboard *(Placeholder)*, 🗄️ Personal Vault *(Placeholder)*, 🛡️ Security Vault *(Placeholder)* |
 | **`[ Spacebar ]`** | Space / Commit suggestion | **1. Voice Input *(Placeholder)*** OR **2. Language Switcher** |
 
 ---
@@ -147,9 +147,9 @@
 | :--- | :--- | :--- |
 | **Phase 1** | HeliBoard Preferences Infrastructure, Vectors & Datasets | COMPLETED |
 | **Phase 2A** | Lightweight Canvas Main Keyboard Layouts (QWERTY with Row 0 & Sub-labels, Symbols 1 & 2, Numpad, Input Adaptation) | COMPLETED |
-| **Phase 2B** | Top Toolbar 3 States (Suggestions, Tools with Go Right Up/Down, Active Chip) & Pinned Actions | PLANNED |
+| **Phase 2B** | Top Toolbar System: Expanded Tools Tray, Pinned Right Customization, 3-min Incognito, Vector Icon Rendering & Settings Hierarchy | COMPLETED |
 | **Phase 2C** | Key Preview Bubble & MoreKeys 2-Row Popup (Floating Over Toolbar) + Gestures | COMPLETED |
 | **Phase 2D** | Clipboard Manager Modal (Top Navigation + 2-Column Pinned Grid + 4 Bottom Buttons) | PLANNED |
 | **Phase 2E** | Emoji & Kaomoji Picker Modal (10 Category Tabs + Grid + 4 Bottom Buttons: ABC, Space, Backspace, Enter) | COMPLETED |
-| **Phase 2F** | Interaction Matrix (Long-press Shortcuts, 5-Min Incognito, Comma Menu, Placeholders) | PLANNED |
+| **Phase 2F** | Interaction Matrix (Long-press Shortcuts, 3-Min Incognito, Comma Menu, Placeholders) | COMPLETED |
 | **Phase 2G** | One-Handed Mode Docking & Zero-Resource Idle Stub Integration | PLANNED |

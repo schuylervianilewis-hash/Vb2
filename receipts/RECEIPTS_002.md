@@ -332,6 +332,130 @@
 - **Deviation**: None. Followed exact Path A Simple Keyboard / HeliBoard zero-compose architecture.
 - **Follow-up**: Ready for on-device RAM measurement in Settings "Running Services".
 
+## Entry 062
+- **Timestamp**: 2026-09-02T04:01:30-07:00
+- **Summary**: Configured FileProvider in AndroidManifest and created file_paths.xml to resolve LogKeeper Export crash.
+- **Exact Files Touched**:
+  - `/app/src/main/AndroidManifest.xml`
+  - `/app/src/main/res/xml/file_paths.xml`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Created `/app/src/main/res/xml/file_paths.xml` granting cache-path and files-path sharing permissions.
+  2. Declared `<provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.fileprovider">` in `AndroidManifest.xml`.
+  3. Verified `MainActivity.kt` export intent correctly obtains content URI via `FileProvider.getUriForFile`.
+  4. Compiled and verified applet builds with zero errors.
+- **How it was verified**: Full clean compilation with `compile_applet`.
+- **Deviation**: None. Resolved exact FileProvider authority mismatch.
+- **Follow-up**: Ready for on-device LogKeeper export validation.
+
+## Entry 063
+- **Timestamp**: 2026-09-02T06:38:45-07:00
+- **Summary**: Added Copy to clipboard button in LogKeeper screen and applied fitsSystemWindows to prevent status bar overlap.
+- **Exact Files Touched**:
+  - `/app/src/main/res/layout/activity_main.xml`
+  - `/app/src/main/res/layout/activity_logs.xml`
+  - `/app/src/main/java/com/example/MainActivity.kt`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Added `android:fitsSystemWindows="true"` and adjusted padding in `activity_main.xml` and `activity_logs.xml` to clear the Android system status bar.
+  2. Added `btnCopyLogs` to `activity_logs.xml` header.
+  3. Wired `btnCopyLogs` in `MainActivity.kt` to copy raw logs text to `ClipboardManager` and display toast feedback.
+  4. Verified full compilation passes with zero errors via `compile_applet`.
+- **How it was verified**: Full clean compilation via `compile_applet`.
+- **Deviation**: None.
+- **Follow-up**: Ready for on-device QA testing.
+
+## Entry 064
+- **Timestamp**: 2026-09-02T07:52:30-07:00
+- **Summary**: Separated Welcome and Settings pages, implemented Appearance customization with live preview (height, corner radius, horizontal/vertical gaps, special keys grey slider, enter key color slider), and fixed R import references.
+- **Exact Files Touched**:
+  - `/app/src/main/java/com/example/MainActivity.kt`
+  - `/app/src/main/java/com/example/ime/settings/AppearanceSettingsActivity.kt`
+  - `/app/src/main/java/com/example/ime/settings/SettingsActivity.kt`
+  - `/app/src/main/java/com/example/logger/LogViewerActivity.kt`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Updated `MainActivity.kt` as clean Welcome/Onboarding entry point.
+  2. Implemented `SettingsActivity.kt` presenting dedicated items (Appearance & Customization, Log Keeper).
+  3. Implemented `AppearanceSettingsActivity.kt` with live interactive `VianKeyboardView` preview reflecting real-time slider adjustments for key height (35-70dp), corner radius (0-24dp), horizontal gap (0-12dp), vertical gap (0-14dp), special keys grey slider (0-100%), and enter key color slider (0-100%).
+  4. Updated `LogViewerActivity.kt` with copy, clear, export, and master toggle switch.
+  5. Resolved R class package imports and confirmed zero-error compilation with `compile_applet`.
+- **How it was verified**: Full clean compilation via `compile_applet`.
+- **Deviation**: None. Followed exact user specification.
+- **Follow-up**: Ready for on-device manual testing and verification.
+
+## Entry 065
+- **Timestamp**: 2026-09-02T09:18:45-07:00
+- **Summary**: Implemented white keycaps on grayish-white container canvas and custom vector icons for Backspace (tag with X), Shift (simple chevron with OFF/ON/CAPS states), and Enter (return elbow arrow).
+- **Exact Files Touched**:
+  - `/app/src/main/java/com/example/ime/keyboard/KeyboardTheme.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/VianKeyboardView.kt`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Updated `KeyboardTheme.kt` palette to match the user's reference: grayish-white canvas container (`0xFFDDE3E6`), pure white character/space keycaps (`0xFFFFFFFF`), soft muted gray special keys (`0xFFC6CFD6`), and teal-slate enter key (`0xFF4A6572`).
+  2. Implemented canvas vector rendering in `VianKeyboardView.kt` for:
+     - **Backspace (`⌫`)**: Pointed tag outline pointing left with a centered '✕', scaled and centered on the key bounds.
+     - **Shift**: Simple upward chevron (`^`) with state transitions: standard stroke outline (OFF), illuminated bold accent chevron (ON), and illuminated chevron with horizontal lock underline (CAPS LOCK).
+     - **Enter (`↵`)**: Clean elbow return arrow in crisp white on top of the teal-slate keycap.
+  3. Verified clean compilation with `compile_applet`.
+- **How it was verified**: Full clean compilation via `compile_applet`.
+- **Deviation**: None. Followed exact user specifications.
+- **Follow-up**: Ready for on-device manual QA testing.
+
+## Entry 067
+- **Timestamp**: 2026-09-02T12:21:40-07:00
+- **Summary**: Aligned IME process architecture to run VianBoardService directly in the root package process (com.example), matching HeliBoard's zero-IPC architecture.
+- **Exact Files Touched**:
+  - `/app/src/main/AndroidManifest.xml`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Removed `android:process=":ime"` from `VianBoardService` in `AndroidManifest.xml`.
+  2. The keyboard IME now operates in the application's root default process, ensuring the upcoming HeliBoard dictionary and prediction engine run in-process with zero IPC serialization latency and shared memory.
+  3. Verified clean compilation with `compile_applet`.
+- **How it was verified**: Full clean compilation via `compile_applet`.
+- **Deviation**: None. Followed exact user directive.
+- **Follow-up**: Architecture ready for next phase.
+
+## Entry 068
+- **Timestamp**: 2026-09-02T12:50:30-07:00
+- **Summary**: Implemented rounder stadium/capsule corner radii for special functional keys (Shift, ?123, comma, period, backspace, and enter).
+- **Exact Files Touched**:
+  - `/app/src/main/java/com/example/ime/keyboard/VianKeyboardView.kt`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Updated key rendering loop in `VianKeyboardView.kt` to identify special functional keys: `SHIFT`, `SYMBOLS_TOGGLE` (?123), `SYMBOLS_MORE_TOGGLE`, `NUMPAD_TOGGLE`, `COMMA`, `PERIOD`, `DELETE` (backspace), and `ENTER`.
+  2. Applied an enhanced corner radius (`cornerRadius * 1.85f`, bounded by half the key dimension) to special keys, giving them a distinct capsule/stadium rounded appearance matching the user reference screenshot and HeliBoard design.
+  3. Preserved standard clean squircle radius for letter, number, and spacebar keys.
+  4. Verified clean build with `compile_applet`.
+- **How it was verified**: Full clean compilation via `compile_applet`.
+- **Deviation**: None. Followed exact user specification.
+- **Follow-up**: Ready for on-device manual QA inspection.
+
+## Entry 069
+- **Timestamp**: 2026-09-02T13:18:30-07:00
+- **Summary**: Created official 8-Phase implementation plan in PHASES_PLAN.md covering settings restructure, interactive toolbar, desktop shortcuts, clipboard card grid, prompt list with themed edit dialog, emoji modal, air-gapped pattern unlock gateway, full vaults, and isolated voice engine.
+- **Exact Files Touched**:
+  - `/PHASES_PLAN.md`
+  - `/receipts/RECEIPTS_002.md`
+- **What was actually done**:
+  1. Generated `/PHASES_PLAN.md` documenting the finalized 8-phase execution roadmap:
+     - Phase 1: Settings Restructure & Layout Customization (Appearance + Desktop Shortcuts 5-7 buttons).
+     - Phase 2: Interactive Toolbar & Ingress Engine (Expand/collapse toggle, action icon slots, word suggestions).
+     - Phase 3: Desktop Shortcuts Modal (On-demand renderer, 5-7 fat buttons, nav arrows, Universal Bottom 4).
+     - Phase 4: Clipboard Modal (2-column cards matching screenshot, pin, edit toolbar, Universal Bottom 4) & Prompt List Modal (Pin, Delete, Edit with centered themed Android Dialog) + Settings Prompt List page.
+     - Phase 5: Emoji Modal (HeliBoard-style + Universal Bottom 4).
+     - Phase 6: In-Keyboard Pattern Unlock (Air-gapped 3x3 grid, full viewport without toolbar/suggestions, protected in Security Settings, 3m/5m sessions, Log Keeper zero-PII).
+     - Phase 7: Personal Vault (masked pills) & Security Vault (.kdbx Chosen View with TOTP countdown spinner, attachments popup, 1234 keypad, Universal Bottom 4).
+     - Phase 8: HeliBoard Dictionary/Prediction Engine in main process and isolated :voice sub-process with post-install model import.
+  2. Preserved non-negotiable rules: Alpha/Symbols/Numpad layouts left untouched, Universal Bottom 4 applied only to designated modals.
+- **How it was verified**: File creation verified; applet compilation verified via `compile_applet`.
+- **Deviation**: None. Followed exact user directive.
+- **Follow-up**: Ready to begin Phase 1 execution upon user instruction.
+
+
+
+
+
 
 
 

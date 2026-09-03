@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#F8FAFC"
+    android:fitsSystemWindows="true"
     android:padding="20dp">
 
     <!-- Header -->
@@ -12,8 +13,8 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingTop="12dp"
-        android:paddingBottom="16dp">
+        android:paddingTop="8dp"
+        android:paddingBottom="20dp">
 
         <TextView
             android:id="@+id/tvHeaderTitle"
@@ -26,10 +27,10 @@
             android:textStyle="bold" />
 
         <Button
-            android:id="@+id/btnLogs"
+            android:id="@+id/btnSettings"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
-            android:text="Logs"
+            android:text="Settings ⚙"
             android:textSize="12sp"
             android:textColor="#0284C7"
             android:background="#E0F2FE" />
@@ -152,97 +153,6 @@
                     android:background="#F1F5F9"
                     android:paddingHorizontal="12dp"
                     android:textSize="15sp" />
-            </LinearLayout>
-
-            <!-- Appearance Settings Sliders -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="#FFFFFF"
-                android:padding="16dp"
-                android:layout_marginBottom="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Appearance Settings"
-                    android:textColor="#0F172A"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <!-- Key Height -->
-                <TextView
-                    android:id="@+id/tvKeyHeight"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Key Height: 46 dp"
-                    android:textColor="#475569"
-                    android:textSize="13sp"
-                    android:layout_marginTop="12dp" />
-
-                <SeekBar
-                    android:id="@+id/sbKeyHeight"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:min="36"
-                    android:max="64"
-                    android:progress="46" />
-
-                <!-- Key Corner Radius -->
-                <TextView
-                    android:id="@+id/tvKeyCornerRadius"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Key Corner Radius: 8 dp"
-                    android:textColor="#475569"
-                    android:textSize="13sp"
-                    android:layout_marginTop="8dp" />
-
-                <SeekBar
-                    android:id="@+id/sbKeyCornerRadius"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:min="0"
-                    android:max="24"
-                    android:progress="8" />
-
-                <!-- Key Gap -->
-                <TextView
-                    android:id="@+id/tvKeyGap"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Horizontal Gap: 4 dp"
-                    android:textColor="#475569"
-                    android:textSize="13sp"
-                    android:layout_marginTop="8dp" />
-
-                <SeekBar
-                    android:id="@+id/sbKeyGap"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:min="0"
-                    android:max="12"
-                    android:progress="4" />
-
-                <!-- Switches -->
-                <Switch
-                    android:id="@+id/swShowPopups"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Show Key Popups"
-                    android:textColor="#0F172A"
-                    android:checked="true"
-                    android:layout_marginTop="12dp" />
-
-                <Switch
-                    android:id="@+id/swShowHints"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Show Corner Hint Labels"
-                    android:textColor="#0F172A"
-                    android:checked="true"
-                    android:layout_marginTop="8dp" />
             </LinearLayout>
 
         </LinearLayout>

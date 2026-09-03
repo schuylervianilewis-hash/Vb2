@@ -28,9 +28,44 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name="com.example.ime.settings.SettingsActivity"
+            android:exported="false"
+            android:label="Settings"
+            android:theme="@style/Theme.MyApplication" />
+
+        <activity
+            android:name="com.example.ime.settings.LayoutCustomizationActivity"
+            android:exported="false"
+            android:label="Layout Customization"
+            android:theme="@style/Theme.MyApplication" />
+
+        <activity
+            android:name="com.example.ime.settings.AppearanceSettingsActivity"
+            android:exported="false"
+            android:label="Appearance Settings"
+            android:theme="@style/Theme.MyApplication" />
+
+        <activity
+            android:name="com.example.ime.settings.ToolbarSettingsActivity"
+            android:exported="false"
+            android:label="Toolbar Settings"
+            android:theme="@style/Theme.MyApplication" />
+
+        <activity
+            android:name="com.example.ime.settings.DesktopShortcutsSettingsActivity"
+            android:exported="false"
+            android:label="Desktop Shortcuts Settings"
+            android:theme="@style/Theme.MyApplication" />
+
+        <activity
+            android:name="com.example.logger.LogViewerActivity"
+            android:exported="false"
+            android:label="Log Keeper"
+            android:theme="@style/Theme.MyApplication" />
+
         <service
             android:name="com.example.ime.VianBoardService"
-            android:process=":ime"
             android:label="@string/ime_service_name"
             android:permission="android.permission.BIND_INPUT_METHOD"
             android:exported="true"
@@ -42,6 +77,16 @@
                 android:name="android.view.im"
                 android:resource="@xml/method" />
         </service>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>
