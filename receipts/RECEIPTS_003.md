@@ -151,5 +151,80 @@
 - **Deviation**: None. Followed exact user specifications.
 - **Follow-up**: Ready for on-device manual QA testing.
 
+## Entry 076
+- **Timestamp**: 2026-09-04T07:12:00-07:00
+- **Summary**: Implemented HeliBoard vector icons, comma popup row 0 selection fix, vertical gap height decoupling, and default 1dp border styling.
+- **Exact Files Touched**:
+  - `/app/src/main/res/drawable/ic_settings.xml`
+  - `/app/src/main/res/drawable/ic_clipboard.xml`
+  - `/app/src/main/res/drawable/ic_one_hand.xml`
+  - `/app/src/main/res/drawable/ic_ime_backspace.xml`
+  - `/app/src/main/res/drawable/ic_ime_enter.xml`
+  - `/app/src/main/res/drawable/ic_ime_shift.xml`
+  - `/app/src/main/res/drawable/ic_ime_shift_on.xml`
+  - `/app/src/main/res/drawable/ic_ime_shift_locked.xml`
+  - `/app/src/main/res/drawable/ic_text_edit.xml`
+  - `/app/src/main/java/com/example/ime/keyboard/KeyPopupWindow.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/KeyboardTheme.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/VianKeyboardView.kt`
+  - `/BLUEPRINT.md`
+  - `/receipts/RECEIPTS_003.md`
+- **What was actually done**:
+  1. Synchronized toolbar and keyboard vector icons with HeliBoard's exact vector paths:
+     - Replaced `ic_settings.xml` with HeliBoard cogwheel icon.
+     - Replaced `ic_clipboard.xml` with HeliBoard clipboard icon.
+     - Replaced `ic_one_hand.xml` with HeliBoard one-hand docking phone icon.
+     - Replaced `ic_ime_backspace.xml` with HeliBoard backspace vector icon.
+     - Replaced `ic_ime_enter.xml` with HeliBoard return-arrow vector icon.
+     - Updated `ic_ime_shift.xml` to HeliBoard outline arrow.
+     - Created `ic_ime_shift_on.xml` (filled arrow) and `ic_ime_shift_locked.xml` (caps lock underline).
+     - Replaced `ic_text_edit.xml` with HeliBoard directional cursor navigation icon.
+  2. Fixed Comma Grid Popup reachability in `KeyPopupWindow.kt`:
+     - Calculated exact screen coordinates (`getLocationOnScreen`) alongside window coordinates.
+     - Recalibrated row selection threshold so swiping into the upper half of the popup cleanly and reliably selects Row 0 (top row).
+  3. Decoupled vertical gap from keyboard container height in `VianKeyboardView.onMeasure`:
+     - Removed `gapsHeight` from `totalCalculatedHeight` so adjusting the vertical gap slider changes inter-row spacing internally without resizing the overall keyboard view height.
+  4. Updated key appearance to match HeliBoard styling:
+     - Set default `borderWidthDp = 1f` and `borderColor = 0x24000000` (14% subtle stroke) in `KeyboardTheme.kt`.
+     - Added border loading in `KeyboardTheme.loadFromPrefs`.
+     - Wired Shift, Backspace, and Enter keys in `VianKeyboardView` to render using the vector drawables with dynamic tinting.
+- **How it was verified**: Full local build verified with `compile_applet` (Build succeeded).
+- **Deviation**: None. Followed exact user specifications.
+- **Follow-up**: Ready for on-device manual QA testing.
+
+## Entry 077
+- **Timestamp**: 2026-09-05T00:50:00-07:00
+- **Summary**: Resolved period popup crash and implemented full 2-part Log Keeper architecture (Catcher/Persistent storage with 2MB auto-cut and crash drop to device Download/ folder + Scoped Storage UI reader).
+- **Exact Files Touched**:
+  - `/app/src/main/java/com/example/ime/keyboard/KeyPopupWindow.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/VianKeyboardView.kt`
+  - `/app/src/main/java/com/example/logger/LogKeeper.kt`
+  - `/app/src/main/java/com/example/VianApplication.kt`
+  - `/app/src/main/java/com/example/logger/LogViewerActivity.kt`
+  - `/BLUEPRINT.md`
+  - `/receipts/RECEIPTS_003.md`
+- **What was actually done**:
+  1. Hardened `KeyPopupWindow.kt`:
+     - Added screen width bounds clamping to `showGridKeys` so 8-column grids (like the 16-symbol period popup) scale dynamically to available display width (`maxAvailableWidth`) without exceeding boundaries.
+     - Protected window display calls with `anchor.isAttachedToWindow && anchor.windowToken != null` and exception handling against detached view races.
+  2. Hardened `VianKeyboardView.kt`:
+     - Added `isPeriodGridPopupActive = false` reset in `ACTION_DOWN` to eliminate stale popup states.
+     - Wrapped popup selection retrieval and dismissal in `try-catch-finally` inside `ACTION_UP` ensuring proper state teardown (`activePressedKey?.isPressed = false`, `popupWindow.dismiss()`) and error logging to `LogKeeper` on any unexpected condition.
+  3. Implemented 2-Part Log Keeper Architecture in `LogKeeper.kt`:
+     - **Part 1 (Catcher & Device Storage)**:
+       - Appends active logs synchronously to persistent internal storage (`files/logs/vian_board_current.log`).
+       - Loads prior persisted logs on initialization.
+       - Enforces the 2MB size limit: automatically cuts the log file when it hits 2MB and drops it directly into the device's `Download/` directory (`vian_board_2mb_limit_reached_*.log`) via MediaStore scoped storage (Android 10+ / Android 16 compliant).
+       - Added `dropCurrentLogToDownloads(reason)` with complete "what is running" context (active component statuses, heap memory, timestamps).
+     - **Part 2 (App UI Reader)**:
+       - Updated `LogViewerActivity.kt` to read persisted and in-memory logs, display active memory usage and master toggle, and trigger immediate direct drop to the device `Download/` folder on export.
+  4. Updated `VianApplication.kt`:
+     - Integrated `Thread.setDefaultUncaughtExceptionHandler` to capture full exception stack traces and immediately trigger `LogKeeper.dropCurrentLogToDownloads(reason = "CRASH_DUMP")` before delegating to the OS handler.
+  5. Updated `BLUEPRINT.md` with Phase 2K.
+- **How it was verified**: Full local build verified with `compile_applet` (Build succeeded).
+- **Deviation**: None. Executed exact user specifications.
+- **Follow-up**: Ready for on-device manual QA testing.
+
+
 
 

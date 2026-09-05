@@ -1,12 +1,21 @@
 package com.example.logger
 
+import android.content.ContentResolver
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
+import android.os.Build
 import android.os.Debug
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.core.content.FileProvider
+import java.io.BufferedReader
 import java.io.File
+import java.io.FileReader
 import java.io.FileWriter
+import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -38,6 +47,8 @@ object LogKeeper {
     private const val PREFS_NAME = "vian_log_keeper_prefs"
     private const val KEY_MASTER_SWITCH = "log_keeper_enabled"
     private const val MAX_LOG_ENTRIES = 300
+    private const val TWO_MB_IN_BYTES = 2 * 1024 * 1024L // 2MB cut limit
+    private const val LOG_FILE_NAME = "vian_board_current.log"
 
     private var appContext: Context? = null
     private var prefs: SharedPreferences? = null
@@ -45,6 +56,7 @@ object LogKeeper {
     private val logEntries = CopyOnWriteArrayList<LogEntry>()
     private val componentRegistry = java.util.concurrent.ConcurrentHashMap<String, ComponentStatus>()
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
+    private val fileDateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
 
     var isEnabled: Boolean = true
         private set
@@ -53,7 +65,142 @@ object LogKeeper {
         appContext = context.applicationContext
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         isEnabled = prefs?.getBoolean(KEY_MASTER_SWITCH, true) ?: true
+        loadPersistentLogsFromDisk()
         logEvent("LogKeeper", "LogKeeper initialized. Master switch: $isEnabled", LogLevel.INFO)
+    }
+
+    private fun getInternalLogFile(): File? {
+        val context = appContext ?: return null
+        val dir = File(context.filesDir, "logs")
+        if (!dir.exists()) dir.mkdirs()
+        return File(dir, LOG_FILE_NAME)
+    }
+
+    private fun loadPersistentLogsFromDisk() {
+        try {
+            val file = getInternalLogFile() ?: return
+            if (!file.exists()) return
+            BufferedReader(FileReader(file)).use { reader ->
+                val lines = mutableListOf<String>()
+                var line = reader.readLine()
+                while (line != null) {
+                    if (line.isNotBlank()) lines.add(line)
+                    line = reader.readLine()
+                }
+                // Populate up to MAX_LOG_ENTRIES from recent history
+                val start = (lines.size - MAX_LOG_ENTRIES).coerceAtLeast(0)
+                for (i in start until lines.size) {
+                    val raw = lines[i]
+                    // Parse simple formatted lines: [timestamp] [LEVEL] (mem MB) message
+                    logEntries.add(
+                        LogEntry(
+                            timestamp = raw.substringBefore("]").removePrefix("["),
+                            level = LogLevel.INFO,
+                            tag = "PERSISTED",
+                            message = raw,
+                            memoryUsageMb = 0.0
+                        )
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            // Ignore corrupted log read
+        }
+    }
+
+    @Synchronized
+    private fun appendToDiskLog(entryString: String) {
+        try {
+            val file = getInternalLogFile() ?: return
+            FileWriter(file, true).use { writer ->
+                writer.write(entryString + "\n")
+            }
+            if (file.length() >= TWO_MB_IN_BYTES) {
+                // Cut at 2MB and auto-drop to device Download/ folder
+                dropCurrentLogToDownloads(reason = "2MB_LIMIT_REACHED")
+            }
+        } catch (e: Exception) {
+            // Failsafe silent fallback
+        }
+    }
+
+    @Synchronized
+    fun dropCurrentLogToDownloads(reason: String = "MANUAL_DROP"): Uri? {
+        val context = appContext ?: return null
+        val sourceFile = getInternalLogFile()
+        val timestamp = fileDateFormat.format(Date())
+        val fileName = "vian_board_${reason.lowercase(Locale.US)}_$timestamp.log"
+
+        val content = StringBuilder()
+        content.append("=== VIAN BOARD DIAGNOSTIC & LOG DUMP ===\n")
+        content.append("Trigger Reason: $reason\n")
+        content.append("Timestamp: ${dateFormat.format(Date())}\n")
+        content.append("Heap Snapshot: ${getMemorySnapshotMb()} MB / Total: ${getTotalMemoryMb()} MB / Max: ${getMaxMemoryMb()} MB\n")
+        content.append("\n--- WHAT IS RUNNING (ACTIVE COMPONENTS) ---\n")
+        for (comp in getActiveComponents()) {
+            content.append("• ${comp.name}: ${if (comp.isRunning) "RUNNING" else "STOPPED"} (Last state change: ${comp.lastStateChange})\n")
+        }
+        content.append("\n--- LOG ENTRIES ---\n")
+
+        if (sourceFile != null && sourceFile.exists()) {
+            try {
+                BufferedReader(FileReader(sourceFile)).use { reader ->
+                    var line = reader.readLine()
+                    while (line != null) {
+                        content.append(line).append("\n")
+                        line = reader.readLine()
+                    }
+                }
+            } catch (e: Exception) {
+                for (entry in logEntries) {
+                    content.append("[${entry.timestamp}] [${entry.level}] [${entry.tag}] (${entry.memoryUsageMb} MB) ${entry.message}\n")
+                }
+            }
+        } else {
+            for (entry in logEntries) {
+                content.append("[${entry.timestamp}] [${entry.level}] [${entry.tag}] (${entry.memoryUsageMb} MB) ${entry.message}\n")
+            }
+        }
+
+        val resultUri = saveToDownloads(context, fileName, content.toString())
+
+        // Reset the active internal log file after successful 2MB cut/drop
+        if (sourceFile != null && sourceFile.exists()) {
+            sourceFile.delete()
+        }
+        logEntries.clear()
+        logEvent("LogKeeper", "Dropped log to Download: $fileName ($reason)", LogLevel.INFO)
+
+        return resultUri
+    }
+
+    private fun saveToDownloads(context: Context, fileName: String, content: String): Uri? {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val values = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "text/plain")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                }
+                val resolver: ContentResolver = context.contentResolver
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                if (uri != null) {
+                    resolver.openOutputStream(uri)?.use { outputStream ->
+                        outputStream.write(content.toByteArray(Charsets.UTF_8))
+                    }
+                }
+                uri
+            } else {
+                @Suppress("DEPRECATION")
+                val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                if (!downloadDir.exists()) downloadDir.mkdirs()
+                val targetFile = File(downloadDir, fileName)
+                targetFile.writeText(content, Charsets.UTF_8)
+                Uri.fromFile(targetFile)
+            }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     fun setMasterSwitch(enabled: Boolean) {
@@ -98,6 +245,7 @@ object LogKeeper {
                 logEntries.removeAt(0)
             }
         }
+        appendToDiskLog("[${entry.timestamp}] [${entry.level}] [${entry.tag}] (${entry.memoryUsageMb} MB) ${entry.message}")
     }
 
     fun logComponentStart(componentName: String) {
@@ -146,6 +294,11 @@ object LogKeeper {
 
     fun clearLogs() {
         logEntries.clear()
+        try {
+            getInternalLogFile()?.delete()
+        } catch (e: Exception) {
+            // silent
+        }
         logEvent("LogKeeper", "All in-memory logs cleared by user", LogLevel.INFO)
     }
 

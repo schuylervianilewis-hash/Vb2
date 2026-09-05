@@ -155,3 +155,6 @@
 | **Phase 2G** | One-Handed Mode Docking & Zero-Resource Idle Stub Integration | PLANNED |
 | **Phase 2H** | Hard Rule System Bar Insets, Period 16-Symbol Popup (2x8), Auto-Numpad Switch & Toolbar Drag UI | COMPLETED |
 | **Phase 2I** | HeliBoard Fedora Incognito Icon, Full HeliBoard Tools Array & Interactive Drag-Handle Reordering (ItemTouchHelper) | COMPLETED |
+| **Phase 2J** | HeliBoard Comma Popup Calibration, Vertical Gap Decoupling, Default 1dp Border Styling & Authentic HeliBoard Vector Icons | COMPLETED |
+| **Phase 2K** | Period Popup Touch/Geometry Crash Hardening, Log Keeper 2-Part Architecture (Catcher/Storage with 2MB Auto-Cut + Crash Drop to Download/ & Scoped Storage UI Reader) | COMPLETED |
+

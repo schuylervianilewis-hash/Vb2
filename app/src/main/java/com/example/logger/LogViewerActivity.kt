@@ -51,17 +51,28 @@ class LogViewerActivity : Activity() {
         }
 
         findViewById<Button>(R.id.btnExportLogs).setOnClickListener {
-            val file = LogKeeper.exportLogsToFile(this)
-            if (file != null) {
-                val uri: Uri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", file)
+            val downloadUri = LogKeeper.dropCurrentLogToDownloads(reason = "USER_EXPORT")
+            if (downloadUri != null) {
+                Toast.makeText(this, "Log saved to Download folder", Toast.LENGTH_SHORT).show()
                 val intent = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
-                    putExtra(Intent.EXTRA_STREAM, uri)
+                    putExtra(Intent.EXTRA_STREAM, downloadUri)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 startActivity(Intent.createChooser(intent, "Export Vian Logs"))
             } else {
-                Toast.makeText(this, "Failed to export logs", Toast.LENGTH_SHORT).show()
+                val file = LogKeeper.exportLogsToFile(this)
+                if (file != null) {
+                    val uri: Uri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", file)
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    startActivity(Intent.createChooser(intent, "Export Vian Logs"))
+                } else {
+                    Toast.makeText(this, "Failed to export logs", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 

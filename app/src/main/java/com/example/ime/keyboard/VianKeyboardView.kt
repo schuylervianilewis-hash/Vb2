@@ -285,9 +285,10 @@ class VianKeyboardView @JvmOverloads constructor(
         val rowCount = if (layout.mode == KeyboardMode.NUMPAD) 4 else 5
         val rowsTotalHeight = (theme.keyHeightDp * rowCount * density)
         val toolbarHeight = (theme.toolbarHeightDp * density)
-        val gapsHeight = (theme.verticalGapDp * rowCount * density)
         val paddingHeight = (12f * density)
-        val totalCalculatedHeight = (rowsTotalHeight + toolbarHeight + gapsHeight + paddingHeight + bottomNavInsetPx).toInt()
+        // Fixed overall keyboard container height based on user keyHeightDp + toolbar + insets.
+        // The verticalGapDp slider adjusts internal spacing between rows inside the keyboard without altering total height.
+        val totalCalculatedHeight = (rowsTotalHeight + toolbarHeight + paddingHeight + bottomNavInsetPx).toInt()
         val height = totalCalculatedHeight.coerceAtLeast((260 * density).toInt())
         setMeasuredDimension(width, height)
     }
@@ -416,13 +417,18 @@ class VianKeyboardView @JvmOverloads constructor(
             // Key label or custom vector icon
             when (key.type) {
                 KeyType.DELETE -> {
-                    drawBackspaceIcon(canvas, key.bounds, density)
+                    drawVectorIcon(canvas, key.bounds, R.drawable.ic_ime_backspace, 22f * density, theme.textColor)
                 }
                 KeyType.SHIFT -> {
-                    drawShiftChevronIcon(canvas, key.bounds, density, layout.shiftState)
+                    val (iconRes, tint) = when (layout.shiftState) {
+                        ShiftState.OFF -> Pair(R.drawable.ic_ime_shift, theme.textColor)
+                        ShiftState.ON -> Pair(R.drawable.ic_ime_shift_on, theme.accentColor)
+                        ShiftState.CAPS_LOCK -> Pair(R.drawable.ic_ime_shift_locked, theme.accentColor)
+                    }
+                    drawVectorIcon(canvas, key.bounds, iconRes, 22f * density, tint)
                 }
                 KeyType.ENTER -> {
-                    drawEnterReturnIcon(canvas, key.bounds, density)
+                    drawVectorIcon(canvas, key.bounds, R.drawable.ic_ime_enter, 22f * density, theme.enterTextColor)
                 }
                 else -> {
                     val paintToUse = when {
@@ -472,6 +478,7 @@ class VianKeyboardView @JvmOverloads constructor(
                     isRepeatingBackspace = false
                     isMultiPopupActive = false
                     isCommaGridPopupActive = false
+                    isPeriodGridPopupActive = false
 
                     // Show single popup bubble via PopupWindow (Option C)
                     if (theme.showPopups && (key.type == KeyType.CHARACTER || key.type == KeyType.COMMA || key.type == KeyType.PERIOD)) {
@@ -539,36 +546,44 @@ class VianKeyboardView @JvmOverloads constructor(
                     return true
                 }
 
-                if (isCommaGridPopupActive) {
-                    val selected = popupWindow.getSelectedItem()
-                    if (!selected.isNullOrEmpty()) {
-                        onCommaPopupSelected?.invoke(selected)
+                try {
+                    if (isCommaGridPopupActive) {
+                        val selected = popupWindow.getSelectedItem()
+                        if (!selected.isNullOrEmpty()) {
+                            onCommaPopupSelected?.invoke(selected)
+                        }
+                    } else if (isPeriodGridPopupActive) {
+                        val selected = popupWindow.getSelectedItem()
+                        if (!selected.isNullOrEmpty()) {
+                            onTextCommit?.invoke(selected)
+                        }
+                    } else if (isMultiPopupActive) {
+                        val selected = popupWindow.getSelectedItem()
+                        if (!selected.isNullOrEmpty()) {
+                            onTextCommit?.invoke(selected)
+                        }
+                    } else {
+                        val key = activePressedKey
+                        if (key != null && !isRepeatingBackspace && !isLongPressTriggered) {
+                            handleKeySelection(key)
+                        }
                     }
-                } else if (isPeriodGridPopupActive) {
-                    val selected = popupWindow.getSelectedItem()
-                    if (!selected.isNullOrEmpty()) {
-                        onTextCommit?.invoke(selected)
-                    }
-                } else if (isMultiPopupActive) {
-                    val selected = popupWindow.getSelectedItem()
-                    if (!selected.isNullOrEmpty()) {
-                        onTextCommit?.invoke(selected)
-                    }
-                } else {
-                    val key = activePressedKey
-                    if (key != null && !isRepeatingBackspace && !isLongPressTriggered) {
-                        handleKeySelection(key)
-                    }
+                } catch (e: Exception) {
+                    com.example.logger.LogKeeper.logError(
+                        component = "VianKeyboardView",
+                        errorCode = "POPUP_SELECTION_ERROR",
+                        errorDetails = "${e.javaClass.simpleName}: ${e.message}"
+                    )
+                } finally {
+                    popupWindow.dismiss()
+                    activePressedKey?.isPressed = false
+                    activePressedKey = null
+                    isRepeatingBackspace = false
+                    isMultiPopupActive = false
+                    isCommaGridPopupActive = false
+                    isPeriodGridPopupActive = false
+                    invalidate()
                 }
-
-                popupWindow.dismiss()
-                activePressedKey?.isPressed = false
-                activePressedKey = null
-                isRepeatingBackspace = false
-                isMultiPopupActive = false
-                isCommaGridPopupActive = false
-                isPeriodGridPopupActive = false
-                invalidate()
                 return true
             }
 
@@ -794,7 +809,7 @@ class VianKeyboardView @JvmOverloads constructor(
 
     private fun drawVectorIcon(canvas: Canvas, bounds: RectF, resId: Int, sizePx: Float, tintColor: Int) {
         val drawable = iconCache.getOrPut(resId) {
-            ContextCompat.getDrawable(context, resId) ?: return
+            ContextCompat.getDrawable(context, resId)?.mutate() ?: return
         }
         val left = (bounds.centerX() - (sizePx / 2f)).toInt()
         val top = (bounds.centerY() - (sizePx / 2f)).toInt()

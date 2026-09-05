@@ -23,7 +23,7 @@ class KeyboardLayout {
     val keys = mutableListOf<KeyData>()
     val toolbarKeys = mutableListOf<KeyData>()
 
-    var suggestions: List<String> = listOf("images", "imahe...", "imagery")
+    var suggestions: List<String> = emptyList()
 
     var isToolbarExpanded: Boolean = false
     var isIncognitoActive: Boolean = false
@@ -164,18 +164,22 @@ class KeyboardLayout {
             } else 0f
 
             val suggestionAreaWidth = totalWidth - anchorBtnWidth - spacing - (if (rightPinnedTotalWidth > 0) rightPinnedTotalWidth + spacing else 0f)
-            val eachSugWidth = (suggestionAreaWidth - (spacing * (suggestions.size - 1).coerceAtLeast(0))) / suggestions.size.coerceAtLeast(1)
-
-            for (sug in suggestions) {
-                val sugKey = KeyData(
-                    code = -200,
-                    label = sug,
-                    type = KeyType.SUGGESTION,
-                    weight = 1f,
-                    bounds = RectF(currentX, startY, currentX + eachSugWidth, startY + height)
-                )
-                toolbarKeys.add(sugKey)
-                currentX += eachSugWidth + spacing
+            if (suggestions.isNotEmpty()) {
+                val eachSugWidth = (suggestionAreaWidth - (spacing * (suggestions.size - 1))) / suggestions.size
+                for (sug in suggestions) {
+                    val sugKey = KeyData(
+                        code = -200,
+                        label = sug,
+                        type = KeyType.SUGGESTION,
+                        weight = 1f,
+                        bounds = RectF(currentX, startY, currentX + eachSugWidth, startY + height)
+                    )
+                    toolbarKeys.add(sugKey)
+                    currentX += eachSugWidth + spacing
+                }
+            } else {
+                // If suggestions are empty, advance currentX so pinned tools remain docked to the right edge
+                currentX = totalWidth - rightPinnedTotalWidth
             }
 
             for ((idx, tool) in pinnedToRender.withIndex()) {
