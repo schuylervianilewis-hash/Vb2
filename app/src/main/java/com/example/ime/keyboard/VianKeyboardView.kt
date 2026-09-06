@@ -323,8 +323,8 @@ class VianKeyboardView @JvmOverloads constructor(
                     canvas.drawCircle(anchorKey.bounds.centerX(), anchorKey.bounds.centerY(), badgeRadius * 0.85f, badgePaint)
                     drawVectorIcon(canvas, anchorKey.bounds, R.drawable.ic_incognito, 18f * density, Color.WHITE)
                 } else {
-                    val textY = anchorKey.bounds.centerY() - ((toolbarTextPaint.descent() + toolbarTextPaint.ascent()) / 2)
-                    canvas.drawText(anchorKey.label, anchorKey.bounds.centerX(), textY, toolbarTextPaint)
+                    val chevronRes = if (layout.isToolbarExpanded) R.drawable.ic_chevron_left else R.drawable.ic_chevron_right
+                    drawVectorIcon(canvas, anchorKey.bounds, chevronRes, 20f * density, theme.textColor)
                 }
             }
 
@@ -363,8 +363,8 @@ class VianKeyboardView @JvmOverloads constructor(
                         canvas.drawCircle(key.bounds.centerX(), key.bounds.centerY(), badgeRadius * 0.85f, badgePaint)
                         drawVectorIcon(canvas, key.bounds, R.drawable.ic_incognito, 18f * density, Color.WHITE)
                     } else {
-                        val textY = key.bounds.centerY() - ((toolbarTextPaint.descent() + toolbarTextPaint.ascent()) / 2)
-                        canvas.drawText(key.label, key.bounds.centerX(), textY, toolbarTextPaint)
+                        val chevronRes = if (layout.isToolbarExpanded) R.drawable.ic_chevron_left else R.drawable.ic_chevron_right
+                        drawVectorIcon(canvas, key.bounds, chevronRes, 20f * density, theme.textColor)
                     }
                 } else if (key.type == KeyType.TOOLBAR_TOOL) {
                     key.tool?.let { tool ->

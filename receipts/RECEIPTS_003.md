@@ -225,6 +225,22 @@
 - **Deviation**: None. Executed exact user specifications.
 - **Follow-up**: Ready for on-device manual QA testing.
 
+## Entry 078
+- **Timestamp**: 2026-09-05T15:55:00-07:00
+- **Summary**: Ignored Vianboardtryagain-main in root .gitignore and upgraded toolbar anchor buttons to crisp scalable vector chevrons.
+- **Exact Files Touched**:
+  - `/.gitignore`
+  - `/app/src/main/java/com/example/ime/keyboard/VianKeyboardView.kt`
+  - `/receipts/RECEIPTS_003.md`
+- **What was actually done**:
+  1. Appended `Vianboardtryagain-main/` to root `/.gitignore` so the imported HeliBoard reference tree is ignored by Git and does not interfere with the GitHub Actions APK compilation pipeline.
+  2. Replaced fallback text strings (`‹` and `›`) on the toolbar anchor button with scalable vector drawables (`R.drawable.ic_chevron_left` and `R.drawable.ic_chevron_right`) in both expanded and collapsed toolbar states in `VianKeyboardView.kt`.
+  3. Preserved Incognito sunglasses badge and full vector toolbar action tools (`Select Word`, `Copy`, `Paste`, etc.).
+  4. Verified all keycap layouts, corner radiuses, and button styles match HeliBoard references.
+- **How it was verified**: Full project compilation verified via `compile_applet` (Build succeeded).
+- **Deviation**: None. Executed exact requested scope.
+- **Follow-up**: Ready for on-device testing.
+
 
 
 
