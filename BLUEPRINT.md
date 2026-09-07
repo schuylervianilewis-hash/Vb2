@@ -158,4 +158,7 @@
 | **Phase 2J** | HeliBoard Comma Popup Calibration, Vertical Gap Decoupling, Default 1dp Border Styling & Authentic HeliBoard Vector Icons | COMPLETED |
 | **Phase 2K** | Period Popup Touch/Geometry Crash Hardening, Log Keeper 2-Part Architecture (Catcher/Storage with 2MB Auto-Cut + Crash Drop to Download/ & Scoped Storage UI Reader) | COMPLETED |
 | **Phase 2L** | Isolated HeliBoard Reference Folder (`Vianboardtryagain-main/` gitignored), Upgraded Anchor Chevrons to Authentic Vector Icons | COMPLETED |
+| **Phase 2M** | Credential Immunity & Security Remediation: Purged /debug.keystore.base64, Sanitized Build Script Signing Configs, Hardened .gitignore & Updated CI Workflow | COMPLETED |
+| **Phase 2N** | Complete HeliBoard Vector Icons/Drawables Import (221 Vector Drawables: ic_* & sym_keyboard_*), Color Resource Alignment & Keystore Removal | COMPLETED |
+| **Phase 2O** | Elimination of Popup on Tap: Removed WindowManager IPC Tap Previews, Kept Pure Canvas Key Inversion & Preserved Long-Press Strips | COMPLETED |
 
