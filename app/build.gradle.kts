@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.google.devtools.ksp)
@@ -27,10 +29,26 @@ android {
       keyPassword = System.getenv("KEY_PASSWORD")
     }
     create("debugConfig") {
+      val localProperties = Properties()
+      val localPropertiesFile = rootProject.file("local.properties")
+      if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { stream ->
+          localProperties.load(stream)
+        }
+      }
+
+      val debugStorePassword = System.getenv("DEBUG_STORE_PASSWORD")
+        ?: localProperties.getProperty("DEBUG_STORE_PASSWORD")
+      val debugKeyPassword = System.getenv("DEBUG_KEY_PASSWORD")
+        ?: localProperties.getProperty("DEBUG_KEY_PASSWORD")
+      val debugKeyAlias = System.getenv("DEBUG_KEY_ALIAS")
+        ?: localProperties.getProperty("DEBUG_KEY_ALIAS")
+        ?: "androiddebugkey"
+
       storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
+      storePassword = debugStorePassword
+      keyAlias = debugKeyAlias
+      keyPassword = debugKeyPassword
     }
   }
 
@@ -41,7 +59,12 @@ android {
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
     }
-    debug { signingConfig = signingConfigs.getByName("debugConfig") }
+    debug {
+      val debugConfig = signingConfigs.getByName("debugConfig")
+      if (debugConfig.storePassword != null && debugConfig.keyPassword != null) {
+        signingConfig = debugConfig
+      }
+    }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
