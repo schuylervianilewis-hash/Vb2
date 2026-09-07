@@ -480,11 +480,6 @@ class VianKeyboardView @JvmOverloads constructor(
                     isCommaGridPopupActive = false
                     isPeriodGridPopupActive = false
 
-                    // Show single popup bubble via PopupWindow (Option C)
-                    if (theme.showPopups && (key.type == KeyType.CHARACTER || key.type == KeyType.COMMA || key.type == KeyType.PERIOD)) {
-                        popupWindow.showSingleKey(this, key, theme)
-                    }
-
                     mainHandler.postDelayed(longPressRunnable, 350)
                     invalidate()
                 }
@@ -524,8 +519,7 @@ class VianKeyboardView @JvmOverloads constructor(
 
                         activePressedKey = key
                         key?.isPressed = true
-                        if (key != null && theme.showPopups && (key.type == KeyType.CHARACTER || key.type == KeyType.COMMA || key.type == KeyType.PERIOD)) {
-                            popupWindow.showSingleKey(this, key, theme)
+                        if (key != null) {
                             mainHandler.postDelayed(longPressRunnable, 350)
                         }
                         invalidate()
