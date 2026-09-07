@@ -29,6 +29,10 @@ jobs:
           keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
 
       - name: Build Debug APK
+        env:
+          DEBUG_STORE_PASSWORD: ${{ secrets.DEBUG_STORE_PASSWORD || 'android' }}
+          DEBUG_KEY_PASSWORD: ${{ secrets.DEBUG_KEY_PASSWORD || 'android' }}
+          DEBUG_KEY_ALIAS: ${{ secrets.DEBUG_KEY_ALIAS || 'androiddebugkey' }}
         run: gradle assembleDebug --no-daemon
 
       - name: Upload Debug APK
