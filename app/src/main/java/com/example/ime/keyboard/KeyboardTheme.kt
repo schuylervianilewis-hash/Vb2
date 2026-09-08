@@ -20,7 +20,7 @@ data class KeyboardTheme(
     // Sliders
     val keyHeightDp: Float = 46f,
     val toolbarHeightDp: Float = 40f,
-    val keyCornerRadiusDp: Float = 8f,
+    val keyCornerRadiusDp: Float = 10f,
     val borderWidthDp: Float = 1f,                      // 1dp border by default matching HeliBoard
     val horizontalGapDp: Float = 4f,
     val verticalGapDp: Float = 5f,
@@ -73,7 +73,7 @@ data class KeyboardTheme(
         fun loadFromPrefs(context: Context): KeyboardTheme {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val keyHeight = prefs.getFloat(KEY_HEIGHT, 46f)
-            val cornerRadius = prefs.getFloat(KEY_CORNER_RADIUS, 8f)
+            val cornerRadius = prefs.getFloat(KEY_CORNER_RADIUS, 10f)
             val borderWidth = prefs.getFloat(KEY_BORDER_WIDTH, 1f)
             val hGap = prefs.getFloat(KEY_HORIZONTAL_GAP, 4f)
             val vGap = prefs.getFloat(KEY_VERTICAL_GAP, 5f)

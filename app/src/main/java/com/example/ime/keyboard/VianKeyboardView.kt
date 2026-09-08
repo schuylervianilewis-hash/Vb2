@@ -63,6 +63,10 @@ class VianKeyboardView @JvmOverloads constructor(
     private val actionKeyPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val enterKeyPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val pressedKeyPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val keyBevelPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val actionKeyBevelPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val enterKeyBevelPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val tempRectF = RectF()
     private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
     }
@@ -226,6 +230,11 @@ class VianKeyboardView @JvmOverloads constructor(
         enterKeyPaint.color = theme.enterKeyColor
         pressedKeyPaint.color = theme.pressedKeyColor
 
+        // HeliBoard Rounded Base Border bevel colors
+        keyBevelPaint.color = 0xFFB4BCC4.toInt()
+        actionKeyBevelPaint.color = 0xFFA0ABB4.toInt()
+        enterKeyBevelPaint.color = 0xFF2E4049.toInt()
+
         borderPaint.color = theme.borderColor
         borderPaint.strokeWidth = theme.borderWidthDp * density
 
@@ -313,15 +322,11 @@ class VianKeyboardView @JvmOverloads constructor(
             // A. Draw Anchor Key first (fixed, non-scrolling)
             val anchorKey = layout.toolbarKeys.firstOrNull { it.type == KeyType.ACTION_EXPAND }
             if (anchorKey != null) {
-                val bgPaint = if (anchorKey.isPressed) pressedKeyPaint else toolbarBackgroundPaint
-                canvas.drawRoundRect(anchorKey.bounds, cornerRadius, cornerRadius, bgPaint)
+                val bgPaint = if (anchorKey.isPressed) pressedKeyPaint else actionKeyPaint
+                val anchorRadius = anchorKey.bounds.height() / 2f
+                canvas.drawRoundRect(anchorKey.bounds, anchorRadius, anchorRadius, bgPaint)
                 if (layout.isIncognitoActive) {
-                    val badgeRadius = minOf(anchorKey.bounds.width(), anchorKey.bounds.height()) / 2f
-                    val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                        color = Color.parseColor("#334155")
-                    }
-                    canvas.drawCircle(anchorKey.bounds.centerX(), anchorKey.bounds.centerY(), badgeRadius * 0.85f, badgePaint)
-                    drawVectorIcon(canvas, anchorKey.bounds, R.drawable.ic_incognito, 18f * density, Color.WHITE)
+                    drawVectorIcon(canvas, anchorKey.bounds, R.drawable.sym_keyboard_incognito_lxx, 20f * density, theme.textColor)
                 } else {
                     val chevronRes = if (layout.isToolbarExpanded) R.drawable.ic_chevron_left else R.drawable.ic_chevron_right
                     drawVectorIcon(canvas, anchorKey.bounds, chevronRes, 20f * density, theme.textColor)
@@ -335,8 +340,10 @@ class VianKeyboardView @JvmOverloads constructor(
 
             for (key in layout.toolbarKeys) {
                 if (key.type == KeyType.ACTION_EXPAND) continue
-                val bgPaint = if (key.isPressed) pressedKeyPaint else toolbarBackgroundPaint
-                canvas.drawRoundRect(key.bounds, cornerRadius, cornerRadius, bgPaint)
+                if (key.isPressed) {
+                    val toolRadius = key.bounds.height() / 2f
+                    canvas.drawRoundRect(key.bounds, toolRadius, toolRadius, pressedKeyPaint)
+                }
 
                 if (key.type == KeyType.TOOLBAR_TOOL) {
                     key.tool?.let { tool ->
@@ -350,27 +357,27 @@ class VianKeyboardView @JvmOverloads constructor(
             canvas.restore()
         } else {
             for (key in layout.toolbarKeys) {
-                val bgPaint = if (key.isPressed) pressedKeyPaint else toolbarBackgroundPaint
-                canvas.drawRoundRect(key.bounds, cornerRadius, cornerRadius, bgPaint)
-
                 if (key.type == KeyType.ACTION_EXPAND) {
+                    val bgPaint = if (key.isPressed) pressedKeyPaint else actionKeyPaint
+                    val anchorRadius = key.bounds.height() / 2f
+                    canvas.drawRoundRect(key.bounds, anchorRadius, anchorRadius, bgPaint)
                     if (layout.isIncognitoActive) {
-                        // Draw Incognito Pill / Badge with sunglasses & hat icon
-                        val badgeRadius = minOf(key.bounds.width(), key.bounds.height()) / 2f
-                        val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                            color = Color.parseColor("#334155")
-                        }
-                        canvas.drawCircle(key.bounds.centerX(), key.bounds.centerY(), badgeRadius * 0.85f, badgePaint)
-                        drawVectorIcon(canvas, key.bounds, R.drawable.ic_incognito, 18f * density, Color.WHITE)
+                        drawVectorIcon(canvas, key.bounds, R.drawable.sym_keyboard_incognito_lxx, 20f * density, theme.textColor)
                     } else {
                         val chevronRes = if (layout.isToolbarExpanded) R.drawable.ic_chevron_left else R.drawable.ic_chevron_right
                         drawVectorIcon(canvas, key.bounds, chevronRes, 20f * density, theme.textColor)
                     }
                 } else if (key.type == KeyType.TOOLBAR_TOOL) {
+                    if (key.isPressed) {
+                        val toolRadius = key.bounds.height() / 2f
+                        canvas.drawRoundRect(key.bounds, toolRadius, toolRadius, pressedKeyPaint)
+                    }
                     key.tool?.let { tool ->
                         drawVectorIcon(canvas, key.bounds, tool.iconResId, 20f * density, theme.textColor)
                     }
-                } else {
+                } else if (key.type == KeyType.SUGGESTION) {
+                    val bgPaint = if (key.isPressed) pressedKeyPaint else toolbarBackgroundPaint
+                    canvas.drawRoundRect(key.bounds, 8f * density, 8f * density, bgPaint)
                     val textY = key.bounds.centerY() - ((toolbarTextPaint.descent() + toolbarTextPaint.ascent()) / 2)
                     canvas.drawText(key.label, key.bounds.centerX(), textY, toolbarTextPaint)
                 }
@@ -389,7 +396,7 @@ class VianKeyboardView @JvmOverloads constructor(
                 else -> keyBackgroundPaint
             }
 
-            // Determine corner radius: special functional keys are noticeably rounder (capsule/stadium curves) matching HeliBoard & screenshot
+            // Determine corner radius: special functional keys are pill/stadium curves matching HeliBoard Rounded Base Border
             val isSpecialKey = key.type == KeyType.SHIFT ||
                                key.type == KeyType.SYMBOLS_TOGGLE ||
                                key.type == KeyType.SYMBOLS_MORE_TOGGLE ||
@@ -400,35 +407,55 @@ class VianKeyboardView @JvmOverloads constructor(
                                key.type == KeyType.ENTER
 
             val currentRadius = if (isSpecialKey) {
-                // Rounder stadium radius, up to half the key height/width
-                (cornerRadius * 1.85f).coerceAtMost(minOf(key.bounds.width(), key.bounds.height()) / 2f)
+                key.bounds.height() / 2f
             } else {
-                cornerRadius
+                10f * density
             }
 
-            // Key background rect with customizable corner radius
-            canvas.drawRoundRect(key.bounds, currentRadius, currentRadius, currentBgPaint)
+            val bevelInsetBottomPx = 1.0f * density
 
-            // Key border if set
-            if (hasBorder) {
-                canvas.drawRoundRect(key.bounds, currentRadius, currentRadius, borderPaint)
+            if (key.isPressed) {
+                // Key pressed: flat depressed surface
+                canvas.drawRoundRect(key.bounds, currentRadius, currentRadius, pressedKeyPaint)
+            } else {
+                // 1. Bottom bevel layer (HeliBoard layer-list reproduction)
+                val bevelPaint = when {
+                    isEnter -> enterKeyBevelPaint
+                    isActionKey -> actionKeyBevelPaint
+                    else -> keyBevelPaint
+                }
+                canvas.drawRoundRect(key.bounds, currentRadius, currentRadius, bevelPaint)
+
+                // 2. Top keycap surface inset at bottom by 1dp
+                tempRectF.set(
+                    key.bounds.left,
+                    key.bounds.top,
+                    key.bounds.right,
+                    key.bounds.bottom - bevelInsetBottomPx
+                )
+                canvas.drawRoundRect(tempRectF, currentRadius, currentRadius, currentBgPaint)
+
+                // Optional subtle border
+                if (hasBorder) {
+                    canvas.drawRoundRect(tempRectF, currentRadius, currentRadius, borderPaint)
+                }
             }
 
             // Key label or custom vector icon
             when (key.type) {
                 KeyType.DELETE -> {
-                    drawVectorIcon(canvas, key.bounds, R.drawable.ic_ime_backspace, 22f * density, theme.textColor)
+                    drawVectorIcon(canvas, key.bounds, R.drawable.sym_keyboard_delete_rounded, 22f * density, theme.textColor)
                 }
                 KeyType.SHIFT -> {
                     val (iconRes, tint) = when (layout.shiftState) {
-                        ShiftState.OFF -> Pair(R.drawable.ic_ime_shift, theme.textColor)
-                        ShiftState.ON -> Pair(R.drawable.ic_ime_shift_on, theme.accentColor)
-                        ShiftState.CAPS_LOCK -> Pair(R.drawable.ic_ime_shift_locked, theme.accentColor)
+                        ShiftState.OFF -> Pair(R.drawable.sym_keyboard_shift_rounded, theme.textColor)
+                        ShiftState.ON -> Pair(R.drawable.sym_keyboard_shift_rounded, theme.accentColor)
+                        ShiftState.CAPS_LOCK -> Pair(R.drawable.sym_keyboard_shift_lock_rounded, theme.accentColor)
                     }
                     drawVectorIcon(canvas, key.bounds, iconRes, 22f * density, tint)
                 }
                 KeyType.ENTER -> {
-                    drawVectorIcon(canvas, key.bounds, R.drawable.ic_ime_enter, 22f * density, theme.enterTextColor)
+                    drawVectorIcon(canvas, key.bounds, R.drawable.sym_keyboard_return_rounded, 22f * density, theme.enterTextColor)
                 }
                 else -> {
                     val paintToUse = when {
@@ -451,11 +478,20 @@ class VianKeyboardView @JvmOverloads constructor(
                 }
             }
 
-            // Hint label (top right corner)
+            // Hint label (top right corner or bottom right for special keys)
             if (theme.showHints && key.hintLabel != null) {
-                val hintX = key.bounds.right - (4f * density)
-                val hintY = key.bounds.top + (11f * density)
-                canvas.drawText(key.hintLabel, hintX, hintY, hintPaint)
+                if (key.type == KeyType.COMMA || key.type == KeyType.PERIOD || key.type == KeyType.ENTER || key.type == KeyType.SPACE) {
+                    val hintX = key.bounds.right - (5f * density)
+                    val hintY = key.bounds.bottom - (5f * density)
+                    val p = if (key.type == KeyType.ENTER) {
+                        Paint(hintPaint).apply { color = 0xCCFFFFFF.toInt() }
+                    } else hintPaint
+                    canvas.drawText(key.hintLabel, hintX, hintY, p)
+                } else {
+                    val hintX = key.bounds.right - (4f * density)
+                    val hintY = key.bounds.top + (11f * density)
+                    canvas.drawText(key.hintLabel, hintX, hintY, hintPaint)
+                }
             }
         }
     }
@@ -480,7 +516,7 @@ class VianKeyboardView @JvmOverloads constructor(
                     isCommaGridPopupActive = false
                     isPeriodGridPopupActive = false
 
-                    mainHandler.postDelayed(longPressRunnable, 350)
+                    mainHandler.postDelayed(longPressRunnable, 400L)
                     invalidate()
                 }
                 return true
@@ -520,7 +556,7 @@ class VianKeyboardView @JvmOverloads constructor(
                         activePressedKey = key
                         key?.isPressed = true
                         if (key != null) {
-                            mainHandler.postDelayed(longPressRunnable, 350)
+                            mainHandler.postDelayed(longPressRunnable, 400L)
                         }
                         invalidate()
                     }

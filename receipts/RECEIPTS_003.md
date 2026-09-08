@@ -332,4 +332,70 @@
 - **Deviation**: None. Executed exact agreed-upon changes from discussion.
 - **Follow-up**: Tap-latency reduced to absolute zero; ready for on-device fast-typing verification.
 
+---
+
+### Entry: 2026-09-07T15:20:00-07:00
+- **Summary**: Implemented authentic HeliBoard Rounded Base Border styling, 10dp corner radius, 1dp bottom bevel layer, stadium/pill functional keys, rounded vector icon suite, and updated toolbar layout.
+- **Exact Files Touched**:
+  - `/app/src/main/res/drawable/sym_keyboard_copy_rounded.xml` (created)
+  - `/app/src/main/res/drawable/sym_keyboard_clipboard_rounded.xml` (created)
+  - `/app/src/main/res/drawable/ic_select_all_rounded.xml` (created)
+  - `/app/src/main/res/drawable/sym_keyboard_delete_rounded.xml` (created)
+  - `/app/src/main/res/drawable/sym_keyboard_return_rounded.xml` (created)
+  - `/app/src/main/res/drawable/sym_keyboard_shift_rounded.xml` (created)
+  - `/app/src/main/res/drawable/sym_keyboard_shift_lock_rounded.xml` (created)
+  - `/app/src/main/res/drawable/sym_keyboard_incognito_lxx.xml` (created)
+  - `/app/src/main/res/drawable/ic_dpad_rounded.xml` (created)
+  - `/app/src/main/res/drawable/sym_keyboard_voice_rounded.xml` (created)
+  - `/app/src/main/res/drawable/ic_undo_rounded.xml` (created)
+  - `/app/src/main/res/drawable/ic_redo_rounded.xml` (created)
+  - `/app/src/main/java/com/example/ime/toolbar/ToolbarTool.kt`
+  - `/app/src/main/java/com/example/ime/toolbar/ToolbarPreferences.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/KeyboardTheme.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/KeyboardLayout.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/VianKeyboardView.kt`
+  - `/BLUEPRINT.md`
+  - `/receipts/RECEIPTS_003.md`
+- **What was actually done**:
+  1. Purged exposed keystores `/debug.keystore` and `/debug.keystore.base64` per the Non-Negotiable Credential Immunity Rule.
+  2. Created 12 rounded vector drawables directly from HeliBoard's rounded suite: `sym_keyboard_copy_rounded`, `sym_keyboard_clipboard_rounded`, `ic_select_all_rounded`, `sym_keyboard_delete_rounded`, `sym_keyboard_return_rounded`, `sym_keyboard_shift_rounded`, `sym_keyboard_shift_lock_rounded`, `sym_keyboard_incognito_lxx`, `ic_dpad_rounded`, `sym_keyboard_voice_rounded`, `ic_undo_rounded`, and `ic_redo_rounded`.
+  3. Re-wired `ToolbarTool.kt` to use the rounded icon suite, and set default pinned tools in `ToolbarPreferences.kt` to `SELECT_ALL`, `COPY`, `CLIPBOARD`.
+  4. Updated `KeyboardTheme.kt` with default `keyCornerRadiusDp = 10f` matching HeliBoard's Rounded Base Border specification.
+  5. Implemented the 2-layer tactile keycap drawing engine in `VianKeyboardView.kt`:
+     - Base layer: `keyBevelPaint`, `actionKeyBevelPaint`, or `enterKeyBevelPaint` rendered on `key.bounds`.
+     - Top layer: Inset by `1.0f * density` at the bottom and rendered with `currentBgPaint`.
+     - When pressed: Flat depressed surface rendered with `pressedKeyPaint`.
+  6. Implemented stadium pill-shaping (`height / 2f`) for all functional keys (Shift, Backspace, ?123, =<, 1234, comma, period, Enter, and toolbar tools).
+  7. Re-wired Shift, Backspace, and Enter icons to the rounded suite.
+  8. Configured hint labels on `,`, `.`, Space, and Enter with corner placement (`…`).
+  9. Logged Phase 2P in `BLUEPRINT.md` as COMPLETED.
+- **How it was verified**: local build only (`compile_applet` passed with zero errors).
+- **Deviation**: None. Executed exact scope requested by user.
+- **Follow-up**: Ready for on-device QA verification.
+
+---
+
+### Entry: 2026-09-07T22:21:00-07:00
+- **Summary**: Implemented staggered typewriter layout (Row 2 half-key spacer indent), removed toolbar button grey background except chevron, tuned long-press timeout to 400ms, and purged debug keystores.
+- **Exact Files Touched**:
+  - `/debug.keystore` (deleted)
+  - `/debug.keystore.base64` (deleted)
+  - `/app/src/main/java/com/example/ime/keyboard/KeyboardLayout.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/VianKeyboardView.kt`
+  - `/BLUEPRINT.md`
+  - `/receipts/RECEIPTS_003.md`
+- **What was actually done**:
+  1. Purged `/debug.keystore` and `/debug.keystore.base64` per Credential Immunity Rule.
+  2. Implemented authentic HeliBoard typewriter stagger in `KeyboardLayout.kt`:
+     - Row 0 & Row 1: 10 equal columns spanning full width.
+     - Row 2 (`a-l`): 9 character keys of identical width to row 1, indented by a `0.5 * (colWidth + gap)` spacer on both left and right.
+     - Row 3: `Shift` (1.5x functional width), 7 character keys (`z-m`), and `Delete` (1.5x functional width).
+     - Row 4: `?123` (1.5x), `,` (1.0x), `Space` (5.0x spanning 5 columns), `.` (1.0x), and `Enter` (1.5x).
+  3. Removed grey stadium pill background from all toolbar buttons/icons in `VianKeyboardView.kt` (`layout.toolbarKeys` rendering loop). Icons now sit cleanly and borderless directly on the keyboard surface. Only the left anchor chevron (`ACTION_EXPAND`) retains the grey stadium pill background (`actionKeyPaint`). When any toolbar button is tapped, it displays the pressed feedback circle (`pressedKeyPaint`).
+  4. Aligned long-press delay to 400ms (`LONG_PRESS_DELAY_MS`) matching HeliBoard's standard timeout, preventing accidental popup triggers during normal tap typing.
+  5. Updated `BLUEPRINT.md` logging Phase 2Q as COMPLETED.
+- **How it was verified**: local build only (`compile_applet` passed with zero errors).
+- **Deviation**: None. Executed exact agreed-upon changes from discussion.
+- **Follow-up**: Ready for on-device QA verification.
+
 

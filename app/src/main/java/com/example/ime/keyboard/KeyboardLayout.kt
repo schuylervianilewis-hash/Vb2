@@ -80,26 +80,82 @@ class KeyboardLayout {
 
         var currentY = keyboardStartY
 
-        for (row in rowDefinitions) {
-            val totalWeight = row.sumOf { it.weight.toDouble() }.toFloat()
-            val totalGaps = (row.size - 1) * horizontalGapPx
-            val widthForKeys = availableWidth - totalGaps
+        if (mode == KeyboardMode.CHARACTERS) {
+            val colWidth = (availableWidth - 9f * horizontalGapPx) / 10f
 
-            var currentX = paddingHorizontalPx
+            for (rowIndex in rowDefinitions.indices) {
+                val row = rowDefinitions[rowIndex]
+                var currentX = paddingHorizontalPx
 
-            for (key in row) {
-                val keyWidth = (key.weight / totalWeight) * widthForKeys
-                key.bounds.set(
-                    currentX,
-                    currentY,
-                    currentX + keyWidth,
-                    currentY + keyHeight
-                )
-                keys.add(key)
-                currentX += keyWidth + horizontalGapPx
+                when (rowIndex) {
+                    0, 1 -> {
+                        // Row 0 & Row 1: 10 equal columns spanning full width
+                        for (key in row) {
+                            key.bounds.set(currentX, currentY, currentX + colWidth, currentY + keyHeight)
+                            keys.add(key)
+                            currentX += colWidth + horizontalGapPx
+                        }
+                    }
+                    2 -> {
+                        // Row 2: Staggered with half-key spacer on left and right (a-l)
+                        currentX += 0.5f * (colWidth + horizontalGapPx)
+                        for (key in row) {
+                            key.bounds.set(currentX, currentY, currentX + colWidth, currentY + keyHeight)
+                            keys.add(key)
+                            currentX += colWidth + horizontalGapPx
+                        }
+                    }
+                    3 -> {
+                        // Row 3: Shift (1.5x), 7 character keys (1.0x), Delete (1.5x)
+                        val functionalWidth = 1.5f * colWidth + 0.5f * horizontalGapPx
+                        for (keyIndex in row.indices) {
+                            val key = row[keyIndex]
+                            val kWidth = if (keyIndex == 0 || keyIndex == row.lastIndex) functionalWidth else colWidth
+                            key.bounds.set(currentX, currentY, currentX + kWidth, currentY + keyHeight)
+                            keys.add(key)
+                            currentX += kWidth + horizontalGapPx
+                        }
+                    }
+                    4 -> {
+                        // Row 4: ?123 (1.5x), , (1.0x), Space (5.0x), . (1.0x), Enter (1.5x)
+                        val functionalWidth = 1.5f * colWidth + 0.5f * horizontalGapPx
+                        val spaceWidth = 5f * colWidth + 4f * horizontalGapPx
+                        for (key in row) {
+                            val kWidth = when (key.type) {
+                                KeyType.SYMBOLS_TOGGLE, KeyType.ENTER -> functionalWidth
+                                KeyType.SPACE -> spaceWidth
+                                else -> colWidth
+                            }
+                            key.bounds.set(currentX, currentY, currentX + kWidth, currentY + keyHeight)
+                            keys.add(key)
+                            currentX += kWidth + horizontalGapPx
+                        }
+                    }
+                }
+                currentY += keyHeight + verticalGapPx
             }
+        } else {
+            for (row in rowDefinitions) {
+                val totalWeight = row.sumOf { it.weight.toDouble() }.toFloat()
+                val totalGaps = (row.size - 1) * horizontalGapPx
+                val widthForKeys = availableWidth - totalGaps
 
-            currentY += keyHeight + verticalGapPx
+                var currentX = paddingHorizontalPx
+
+                for (key in row) {
+                    val keyWidth = (key.weight / totalWeight) * widthForKeys
+                    key.bounds.set(
+                        currentX,
+                        currentY,
+                        currentX + keyWidth,
+                        currentY + keyHeight
+                    )
+                    keys.add(key)
+                    currentX += keyWidth + horizontalGapPx
+                }
+
+                currentY += keyHeight + verticalGapPx
+            }
         }
     }
 
@@ -381,6 +437,7 @@ class KeyboardLayout {
             KeyData(
                 code = '.'.code,
                 label = ".",
+                hintLabel = "…",
                 moreKeys = listOf(".", "…", "!", "?", "-", "_"),
                 type = KeyType.PERIOD,
                 weight = 1.0f

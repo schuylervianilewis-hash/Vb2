@@ -18,7 +18,7 @@ class ToolbarPreferences(context: Context) {
     fun getPinnedTools(): List<ToolbarTool> {
         val saved = prefs.getString(KEY_PINNED_TOOLS, null)
         if (saved.isNullOrEmpty()) {
-            return ToolbarTool.values().filter { it.isDefaultPinnedRight }
+            return listOf(ToolbarTool.SELECT_ALL, ToolbarTool.COPY, ToolbarTool.CLIPBOARD)
         }
         return saved.split(",").mapNotNull { ToolbarTool.fromId(it.trim()) }
     }

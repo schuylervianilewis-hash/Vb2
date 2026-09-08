@@ -1,6 +1,6 @@
 {
-  "name": "Vian Board",
-  "description": "Vian Board Keyboard with authentic theme, layout tester, and settings",
+  "name": "Remix Remix Remix Vian board",
+  "description": "Vian series",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

@@ -161,4 +161,6 @@
 | **Phase 2M** | Credential Immunity & Security Remediation: Purged /debug.keystore.base64, Sanitized Build Script Signing Configs, Hardened .gitignore & Updated CI Workflow | COMPLETED |
 | **Phase 2N** | Complete HeliBoard Vector Icons/Drawables Import (221 Vector Drawables: ic_* & sym_keyboard_*), Color Resource Alignment & Keystore Removal | COMPLETED |
 | **Phase 2O** | Elimination of Popup on Tap: Removed WindowManager IPC Tap Previews, Kept Pure Canvas Key Inversion & Preserved Long-Press Strips | COMPLETED |
+| **Phase 2P** | HeliBoard Look and Feel: 10dp Key Corner Radius, 1dp Bottom Bevel Base Layer, Stadium/Pill Shape for Functional Keys, Vector Suite Icons (Backspaces, Shifts, Return, Incognito, Toolbar Pinned Tools) & Period Hint | COMPLETED |
+| **Phase 2Q** | Staggered Typewriter Geometry (Half-Key Spacer Stagger for Row 2, 1.5x Functional Keys, Typewriter Diagonal Offset), Borderless Toolbar Icon Glyphs & 400ms HeliBoard Long-Press Tuning | COMPLETED |
 
