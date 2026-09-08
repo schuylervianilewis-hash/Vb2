@@ -42,7 +42,7 @@ class ToolbarPreferences(context: Context) {
     }
 
     var hidePinnedWhenExpanded: Boolean
-        get() = prefs.getBoolean(KEY_HIDE_PINNED_ON_EXPAND, true)
+        get() = prefs.getBoolean(KEY_HIDE_PINNED_ON_EXPAND, false)
         set(value) = prefs.edit().putBoolean(KEY_HIDE_PINNED_ON_EXPAND, value).apply()
 
     var tempIncognitoDurationMinutes: Int

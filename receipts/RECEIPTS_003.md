@@ -398,4 +398,36 @@
 - **Deviation**: None. Executed exact agreed-upon changes from discussion.
 - **Follow-up**: Ready for on-device QA verification.
 
+---
+
+### Entry: 2026-09-07T23:18:00-07:00
+- **Summary**: Implemented HeliBoard key bevel realism (bottom-only dark bevel), 52dp default key height, pinned tools persistence during toolbar expansion, 26dp toolbar icon scaling, and corner symbol hint injection into moreKeys popups.
+- **Exact Files Touched**:
+  - `/app/src/main/java/com/example/ime/keyboard/KeyboardTheme.kt`
+  - `/app/src/main/java/com/example/ime/toolbar/ToolbarPreferences.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/KeyboardLayout.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/VianKeyboardView.kt`
+  - `/BLUEPRINT.md`
+  - `/receipts/RECEIPTS_003.md`
+- **What was actually done**:
+  1. Updated `KeyboardTheme.kt`:
+     - Updated default `keyHeightDp` from `46f` to `52f` in both `KeyboardTheme` constructor and `loadFromPrefs`.
+     - Confirmed HeliBoard exact palette: `#E8EAED` keyboard background, `#FFFFFF` key background, `#CCCED5` action keys, `#A9ABAD` bottom bevel for letter keys, `#95989E` bottom bevel for action keys.
+  2. Updated `ToolbarPreferences.kt` & `KeyboardLayout.kt`:
+     - Set default `hidePinnedWhenExpanded` to `false` in both `ToolbarPreferences` and `KeyboardLayout`.
+     - Refactored `buildToolbar()` so pinned tools remain docked on the right edge in both collapsed and expanded states.
+     - Updated `findKeyAt()` to properly route touch events to expanded scrollable tools and pinned tools without interference.
+  3. Updated `VianKeyboardView.kt`:
+     - Eliminated the 4-sided wireframe border (`borderPaint`) around keys. Keycaps are now rendered with a 1dp inset on the bottom over `keyBevelPaint`, exposing dark bevel ONLY on the bottom edge like authentic physical buttons.
+     - Scaled toolbar vector icons from 20dp to 26dp to match the visual weight of the suggestion strip.
+     - Updated expanded toolbar rendering to draw scrollable tools inside the translation clip and pinned tools outside the clip at their fixed right positions.
+     - Updated `longPressRunnable` so keys with corner hint symbols reliably trigger the popup even if moreKeys was initially empty.
+  4. Updated `KeyboardLayout.kt`:
+     - Added `buildMoreKeys()` helper to automatically prepend a key's corner hint symbol into its `moreKeys` list across rows 0, 1, 2, and 3.
+  5. Updated `BLUEPRINT.md` logging Phase 2R as COMPLETED.
+- **How it was verified**: local build only (`compile_applet` passed with zero errors).
+- **Deviation**: None. Executed exact agreed-upon changes from discussion.
+- **Follow-up**: Ready for on-device QA verification.
+
+
 

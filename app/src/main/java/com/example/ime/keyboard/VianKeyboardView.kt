@@ -193,9 +193,10 @@ class VianKeyboardView @JvmOverloads constructor(
                     rows = 2,
                     theme = theme
                 )
-            } else if (key.moreKeys.isNotEmpty()) {
+            } else if (key.moreKeys.isNotEmpty() || !key.hintLabel.isNullOrEmpty()) {
                 isMultiPopupActive = true
-                popupWindow.showMoreKeys(this@VianKeyboardView, key, key.moreKeys, theme)
+                val popupItems = if (key.moreKeys.isNotEmpty()) key.moreKeys else listOf(key.hintLabel!!)
+                popupWindow.showMoreKeys(this@VianKeyboardView, key, popupItems, theme)
             }
         }
     }
@@ -231,8 +232,8 @@ class VianKeyboardView @JvmOverloads constructor(
         pressedKeyPaint.color = theme.pressedKeyColor
 
         // HeliBoard Rounded Base Border bevel colors
-        keyBevelPaint.color = 0xFFB4BCC4.toInt()
-        actionKeyBevelPaint.color = 0xFFA0ABB4.toInt()
+        keyBevelPaint.color = theme.keyBottomBevelColor
+        actionKeyBevelPaint.color = theme.actionKeyBevelColor
         enterKeyBevelPaint.color = 0xFF2E4049.toInt()
 
         borderPaint.color = theme.borderColor
@@ -326,20 +327,20 @@ class VianKeyboardView @JvmOverloads constructor(
                 val anchorRadius = anchorKey.bounds.height() / 2f
                 canvas.drawRoundRect(anchorKey.bounds, anchorRadius, anchorRadius, bgPaint)
                 if (layout.isIncognitoActive) {
-                    drawVectorIcon(canvas, anchorKey.bounds, R.drawable.sym_keyboard_incognito_lxx, 20f * density, theme.textColor)
+                    drawVectorIcon(canvas, anchorKey.bounds, R.drawable.sym_keyboard_incognito_lxx, 26f * density, theme.textColor)
                 } else {
                     val chevronRes = if (layout.isToolbarExpanded) R.drawable.ic_chevron_left else R.drawable.ic_chevron_right
-                    drawVectorIcon(canvas, anchorKey.bounds, chevronRes, 20f * density, theme.textColor)
+                    drawVectorIcon(canvas, anchorKey.bounds, chevronRes, 26f * density, theme.textColor)
                 }
             }
 
-            // B. Clip and translate scrollable tools tray
+            // B. Clip and translate scrollable tools tray (tools in middle)
             canvas.save()
             canvas.clipRect(layout.toolbarScrollBounds)
             canvas.translate(-layout.toolbarScrollOffset, 0f)
 
             for (key in layout.toolbarKeys) {
-                if (key.type == KeyType.ACTION_EXPAND) continue
+                if (key.code !in -300 downTo -399) continue
                 if (key.isPressed) {
                     val toolRadius = key.bounds.height() / 2f
                     canvas.drawRoundRect(key.bounds, toolRadius, toolRadius, pressedKeyPaint)
@@ -347,7 +348,7 @@ class VianKeyboardView @JvmOverloads constructor(
 
                 if (key.type == KeyType.TOOLBAR_TOOL) {
                     key.tool?.let { tool ->
-                        drawVectorIcon(canvas, key.bounds, tool.iconResId, 20f * density, theme.textColor)
+                        drawVectorIcon(canvas, key.bounds, tool.iconResId, 26f * density, theme.textColor)
                     }
                 } else {
                     val textY = key.bounds.centerY() - ((toolbarTextPaint.descent() + toolbarTextPaint.ascent()) / 2)
@@ -355,6 +356,20 @@ class VianKeyboardView @JvmOverloads constructor(
                 }
             }
             canvas.restore()
+
+            // C. Draw docked pinned tools (fixed on right edge)
+            for (key in layout.toolbarKeys) {
+                if (key.code !in -400 downTo -499) continue
+                if (key.isPressed) {
+                    val toolRadius = key.bounds.height() / 2f
+                    canvas.drawRoundRect(key.bounds, toolRadius, toolRadius, pressedKeyPaint)
+                }
+                if (key.type == KeyType.TOOLBAR_TOOL) {
+                    key.tool?.let { tool ->
+                        drawVectorIcon(canvas, key.bounds, tool.iconResId, 26f * density, theme.textColor)
+                    }
+                }
+            }
         } else {
             for (key in layout.toolbarKeys) {
                 if (key.type == KeyType.ACTION_EXPAND) {
@@ -362,10 +377,10 @@ class VianKeyboardView @JvmOverloads constructor(
                     val anchorRadius = key.bounds.height() / 2f
                     canvas.drawRoundRect(key.bounds, anchorRadius, anchorRadius, bgPaint)
                     if (layout.isIncognitoActive) {
-                        drawVectorIcon(canvas, key.bounds, R.drawable.sym_keyboard_incognito_lxx, 20f * density, theme.textColor)
+                        drawVectorIcon(canvas, key.bounds, R.drawable.sym_keyboard_incognito_lxx, 26f * density, theme.textColor)
                     } else {
                         val chevronRes = if (layout.isToolbarExpanded) R.drawable.ic_chevron_left else R.drawable.ic_chevron_right
-                        drawVectorIcon(canvas, key.bounds, chevronRes, 20f * density, theme.textColor)
+                        drawVectorIcon(canvas, key.bounds, chevronRes, 26f * density, theme.textColor)
                     }
                 } else if (key.type == KeyType.TOOLBAR_TOOL) {
                     if (key.isPressed) {
@@ -373,7 +388,7 @@ class VianKeyboardView @JvmOverloads constructor(
                         canvas.drawRoundRect(key.bounds, toolRadius, toolRadius, pressedKeyPaint)
                     }
                     key.tool?.let { tool ->
-                        drawVectorIcon(canvas, key.bounds, tool.iconResId, 20f * density, theme.textColor)
+                        drawVectorIcon(canvas, key.bounds, tool.iconResId, 26f * density, theme.textColor)
                     }
                 } else if (key.type == KeyType.SUGGESTION) {
                     val bgPaint = if (key.isPressed) pressedKeyPaint else toolbarBackgroundPaint
@@ -418,7 +433,7 @@ class VianKeyboardView @JvmOverloads constructor(
                 // Key pressed: flat depressed surface
                 canvas.drawRoundRect(key.bounds, currentRadius, currentRadius, pressedKeyPaint)
             } else {
-                // 1. Bottom bevel layer (HeliBoard layer-list reproduction)
+                // 1. Bottom bevel layer (HeliBoard layer-list reproduction: only bottom edge shows dark bevel)
                 val bevelPaint = when {
                     isEnter -> enterKeyBevelPaint
                     isActionKey -> actionKeyBevelPaint
@@ -434,11 +449,6 @@ class VianKeyboardView @JvmOverloads constructor(
                     key.bounds.bottom - bevelInsetBottomPx
                 )
                 canvas.drawRoundRect(tempRectF, currentRadius, currentRadius, currentBgPaint)
-
-                // Optional subtle border
-                if (hasBorder) {
-                    canvas.drawRoundRect(tempRectF, currentRadius, currentRadius, borderPaint)
-                }
             }
 
             // Key label or custom vector icon

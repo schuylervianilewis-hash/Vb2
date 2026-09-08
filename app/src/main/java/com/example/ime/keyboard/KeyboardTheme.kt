@@ -4,9 +4,11 @@ import android.content.Context
 import android.content.SharedPreferences
 
 data class KeyboardTheme(
-    val backgroundColor: Int = 0xFFDDE3E6.toInt(),      // Grayish-white container canvas
+    val backgroundColor: Int = 0xFFE8EAED.toInt(),      // HeliBoard keyboard_background_lxx_light_border
     val keyBackgroundColor: Int = 0xFFFFFFFF.toInt(),   // Crisp white letter/number/space keycaps
-    val actionKeyColor: Int = 0xFFC6CFD6.toInt(),       // Soft grey special keys (shift, ?123, comma, period, backspace)
+    val actionKeyColor: Int = 0xFFCCCED5.toInt(),       // HeliBoard key_background_functional_lxx_light_border
+    val keyBottomBevelColor: Int = 0xFFA9ABAD.toInt(),  // HeliBoard key_bottom_bevel_lxx_base
+    val actionKeyBevelColor: Int = 0xFF95989E.toInt(),  // HeliBoard functional key bevel
     val enterKeyColor: Int = 0xFF4A6572.toInt(),        // Muted teal-slate enter key
     val accentColor: Int = 0xFF0284C7.toInt(),          // Sky 600
     val textColor: Int = 0xFF0F172A.toInt(),            // High contrast text
@@ -18,7 +20,7 @@ data class KeyboardTheme(
     val popupTextColor: Int = 0xFF0F172A.toInt(),
     
     // Sliders
-    val keyHeightDp: Float = 46f,
+    val keyHeightDp: Float = 52f,
     val toolbarHeightDp: Float = 40f,
     val keyCornerRadiusDp: Float = 10f,
     val borderWidthDp: Float = 1f,                      // 1dp border by default matching HeliBoard
@@ -42,9 +44,9 @@ data class KeyboardTheme(
         const val KEY_SHOW_HINTS = "key_show_hints"
 
         fun calculateActionKeyColor(grayProgress: Int): Int {
-            // 0 = #F8FAFC (very light), 40 = #C6CFD6 (screenshot grey), 100 = #8E9CA8 (darker grey)
+            // 0 = #F1F3F4, 40 = #CCCED5 (HeliBoard functional key), 100 = #8E9CA8 (darker grey)
             val factor = grayProgress.coerceIn(0, 100) / 100f
-            val startR = 248; val startG = 250; val startB = 252
+            val startR = 241; val startG = 243; val startB = 244
             val endR = 142; val endG = 156; val endB = 168
             val r = (startR + (endR - startR) * factor).toInt()
             val g = (startG + (endG - startG) * factor).toInt()
@@ -72,7 +74,7 @@ data class KeyboardTheme(
 
         fun loadFromPrefs(context: Context): KeyboardTheme {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            val keyHeight = prefs.getFloat(KEY_HEIGHT, 46f)
+            val keyHeight = prefs.getFloat(KEY_HEIGHT, 52f)
             val cornerRadius = prefs.getFloat(KEY_CORNER_RADIUS, 10f)
             val borderWidth = prefs.getFloat(KEY_BORDER_WIDTH, 1f)
             val hGap = prefs.getFloat(KEY_HORIZONTAL_GAP, 4f)
