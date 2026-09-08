@@ -429,5 +429,22 @@
 - **Deviation**: None. Executed exact agreed-upon changes from discussion.
 - **Follow-up**: Ready for on-device QA verification.
 
+---
+
+### Entry: 2026-09-08T00:15:00-07:00
+- **Summary**: Hardened GitHub Actions CI workflow to explicitly invoke ':app:assembleDebug' via './gradlew' with chmod +x permission, eliminating Configuration Cache task lookup error on root project.
+- **Exact Files Touched**:
+  - `/.github/workflows/build_apk.yml`
+  - `/BLUEPRINT.md`
+  - `/receipts/RECEIPTS_003.md`
+- **What was actually done**:
+  1. Updated `/.github/workflows/build_apk.yml`:
+     - Added `chmod +x gradlew` to ensure the Gradle wrapper has execute permission in the runner environment.
+     - Changed the build step command from `gradle assembleDebug --no-daemon` to `./gradlew :app:assembleDebug --no-daemon`. In multi-module Gradle setups under Gradle 9.3.1 with Configuration Cache, tasks must be explicitly qualified with their subproject namespace (`:app`).
+  2. Updated `BLUEPRINT.md` adding Phase 2S as COMPLETED.
+- **How it was verified**: local build only (`compile_applet` passed with zero errors).
+- **Deviation**: None. Executed exact agreed-upon changes from discussion.
+- **Follow-up**: Ready for export to GitHub and pipeline execution.
+
 
 

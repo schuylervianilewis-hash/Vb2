@@ -164,5 +164,6 @@
 | **Phase 2P** | HeliBoard Look and Feel: 10dp Key Corner Radius, 1dp Bottom Bevel Base Layer, Stadium/Pill Shape for Functional Keys, Vector Suite Icons (Backspaces, Shifts, Return, Incognito, Toolbar Pinned Tools) & Period Hint | COMPLETED |
 | **Phase 2Q** | Staggered Typewriter Geometry (Half-Key Spacer Stagger for Row 2, 1.5x Functional Keys, Typewriter Diagonal Offset), Borderless Toolbar Icon Glyphs & 400ms HeliBoard Long-Press Tuning | COMPLETED |
 | **Phase 2R** | HeliBoard Key Bevel Realism (Bottom-Only Dark Bevel, Removed 4-Sided Wireframe Stroke), 52dp Default Key Height, Toolbar Expansion Pinned Persistence, Toolbar Icons 26dp Sizing, and Corner Symbol Injection in Long-Press Popups | COMPLETED |
+| **Phase 2S** | CI Pipeline Task Target Hardening: Updated GitHub Actions workflow to explicitly invoke `:app:assembleDebug` via `./gradlew` with executable permissions, resolving Configuration Cache task lookup failure on root project | COMPLETED |
 
 
