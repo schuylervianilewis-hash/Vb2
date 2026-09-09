@@ -12,9 +12,7 @@ import com.example.R
 class ClipboardCardsAdapter(
     private val storage: ClipboardStorage,
     private val onItemClick: (String) -> Unit,
-    private val onItemLongClick: (View, String) -> Unit,
-    private val onPinToggle: (String) -> Unit,
-    private val onDelete: (String) -> Unit
+    private val onItemLongClick: (View, String) -> Unit
 ) : RecyclerView.Adapter<ClipboardCardsAdapter.ViewHolder>() {
 
     private val items = mutableListOf<String>()
@@ -36,26 +34,23 @@ class ClipboardCardsAdapter(
 
         val isPinned = storage.isPinned(text)
         if (isPinned) {
-            holder.ivPin.setColorFilter(ContextCompat.getColor(holder.itemView.context, android.R.color.holo_blue_dark))
+            holder.ivPinBadge.visibility = View.VISIBLE
+            holder.ivPinBadge.setColorFilter(ContextCompat.getColor(holder.itemView.context, android.R.color.holo_blue_dark))
         } else {
-            holder.ivPin.setColorFilter(0xFF94A3B8.toInt())
+            holder.ivPinBadge.visibility = View.GONE
         }
-        holder.ivDelete.setColorFilter(0xFF94A3B8.toInt())
 
         holder.itemView.setOnClickListener { onItemClick(text) }
         holder.itemView.setOnLongClickListener {
             onItemLongClick(holder.itemView, text)
             true
         }
-        holder.ivPin.setOnClickListener { onPinToggle(text) }
-        holder.ivDelete.setOnClickListener { onDelete(text) }
     }
 
     override fun getItemCount(): Int = items.size
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvClipText: TextView = itemView.findViewById(R.id.tvClipText)
-        val ivPin: ImageView = itemView.findViewById(R.id.ivPin)
-        val ivDelete: ImageView = itemView.findViewById(R.id.ivDelete)
+        val ivPinBadge: ImageView = itemView.findViewById(R.id.ivPinBadge)
     }
 }

@@ -168,5 +168,6 @@
 | **Phase 2T** | CI Wrapper-Less Execution: Replaced `./gradlew :app:assembleDebug` with system `gradle :app:assembleDebug` in `.github/workflows/build_apk.yml`, eliminating dependency on absent `gradle-wrapper.jar` | COMPLETED |
 | **Phase 2U** | On-Demand Clipboard & Emoji Modals with Speed Island, Category Pill Tabs Strip, and Unified 4-Button Modal Bottom Bar Component (`ModalBottomBarView`) | COMPLETED |
 | **Phase 2V** | Quick Notes On-Demand Modal (Separate Zero-Idle Storage, 2-Column Staggered Grid, Card Long-Press Compact Popups for Clipboard & Notes, Translucent Dialog Note Editing Activity, and Settings Transfer Mode) | COMPLETED |
+| **Phase 2W** | HeliBoard Full Parity Overhaul: Universal Navigation Bar Insets (`onComputeInsets` + Root Container Insets Padding), Comma/Period Action Key Coloring, Roboto Typography & HeliBoard Proportions, Suggestion Strip Dividers & 3-Dot Indicators, Full HeliBoard Emoji Library Migration with Non-Scrolling 10-Tab Header, Simple 4-Line Cards & Compact On-Demand Long-Press Popups | COMPLETED |
 
 

@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.inputmethodservice.InputMethodService
 import android.os.Build
 import android.os.Handler
@@ -16,6 +17,8 @@ import android.view.WindowInsets
 import android.view.inputmethod.EditorInfo
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.example.ime.clipboard.ClipboardStorage
 import com.example.ime.clipboard.VianClipboardModalView
 import com.example.ime.emoji.VianEmojiModalView
@@ -76,8 +79,19 @@ class VianBoardService : InputMethodService() {
     override fun onConfigureWindow(win: android.view.Window, isFullscreen: Boolean, isCandidatesOnly: Boolean) {
         super.onConfigureWindow(win, isFullscreen, isCandidatesOnly)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            win.setDecorFitsSystemWindows(true)
+            win.setDecorFitsSystemWindows(false)
         }
+        win.navigationBarColor = Color.parseColor("#ECEFF1")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            win.isNavigationBarContrastEnforced = false
+        }
+    }
+
+    override fun onComputeInsets(outInsets: InputMethodService.Insets) {
+        super.onComputeInsets(outInsets)
+        outInsets.contentTopInsets = 0
+        outInsets.visibleTopInsets = 0
+        outInsets.touchableInsets = InputMethodService.Insets.TOUCHABLE_INSETS_FRAME
     }
 
     override fun onCreateInputView(): View {
@@ -87,7 +101,15 @@ class VianBoardService : InputMethodService() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
+            setBackgroundColor(Color.parseColor("#ECEFF1"))
         }
+
+        ViewCompat.setOnApplyWindowInsetsListener(container) { v, insets ->
+            val navInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            v.setPadding(0, 0, 0, navInsets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+
         val view = VianKeyboardView(this).apply {
             onKeyAction = { key -> handleKeyAction(key) }
             onTextCommit = { text -> currentInputConnection?.commitText(text, 1) }

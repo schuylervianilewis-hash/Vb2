@@ -12,10 +12,7 @@ import com.example.R
 class QuickNotesCardsAdapter(
     private val storage: QuickNotesStorage,
     private val onItemClick: (String) -> Unit,
-    private val onItemLongClick: (View, String) -> Unit,
-    private val onPinToggle: (String) -> Unit,
-    private val onEdit: (String) -> Unit,
-    private val onDelete: (String) -> Unit
+    private val onItemLongClick: (View, String) -> Unit
 ) : RecyclerView.Adapter<QuickNotesCardsAdapter.ViewHolder>() {
 
     private val items = mutableListOf<String>()
@@ -37,30 +34,23 @@ class QuickNotesCardsAdapter(
 
         val isPinned = storage.isPinned(text)
         if (isPinned) {
-            holder.ivNotePin.setColorFilter(ContextCompat.getColor(holder.itemView.context, android.R.color.holo_blue_dark))
+            holder.ivNotePinBadge.visibility = View.VISIBLE
+            holder.ivNotePinBadge.setColorFilter(ContextCompat.getColor(holder.itemView.context, android.R.color.holo_blue_dark))
         } else {
-            holder.ivNotePin.setColorFilter(0xFF94A3B8.toInt())
+            holder.ivNotePinBadge.visibility = View.GONE
         }
-        holder.ivNoteEdit.setColorFilter(0xFF94A3B8.toInt())
-        holder.ivNoteDelete.setColorFilter(0xFF94A3B8.toInt())
 
         holder.itemView.setOnClickListener { onItemClick(text) }
         holder.itemView.setOnLongClickListener {
             onItemLongClick(holder.itemView, text)
             true
         }
-
-        holder.ivNotePin.setOnClickListener { onPinToggle(text) }
-        holder.ivNoteEdit.setOnClickListener { onEdit(text) }
-        holder.ivNoteDelete.setOnClickListener { onDelete(text) }
     }
 
     override fun getItemCount(): Int = items.size
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvNoteText: TextView = itemView.findViewById(R.id.tvNoteText)
-        val ivNotePin: ImageView = itemView.findViewById(R.id.ivNotePin)
-        val ivNoteEdit: ImageView = itemView.findViewById(R.id.ivNoteEdit)
-        val ivNoteDelete: ImageView = itemView.findViewById(R.id.ivNoteDelete)
+        val ivNotePinBadge: ImageView = itemView.findViewById(R.id.ivNotePinBadge)
     }
 }

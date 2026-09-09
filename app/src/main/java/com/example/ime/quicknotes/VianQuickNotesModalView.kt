@@ -49,17 +49,6 @@ class VianQuickNotesModalView @JvmOverloads constructor(
             },
             onItemLongClick = { anchorView, text ->
                 showCardPopup(anchorView, text)
-            },
-            onPinToggle = { text ->
-                storage.togglePin(text)
-                refreshData()
-            },
-            onEdit = { text ->
-                openEditDialog(text, isNew = false)
-            },
-            onDelete = { text ->
-                storage.deleteNote(text)
-                refreshData()
             }
         )
         rvQuickNotesCards.adapter = adapter

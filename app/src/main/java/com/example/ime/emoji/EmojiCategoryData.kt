@@ -15,134 +15,46 @@ object EmojiCategoryData {
 
     private const val PREFS_NAME = "vian_emoji_prefs"
     private const val KEY_RECENTS = "recent_emojis"
-    private const val MAX_RECENTS = 40
+    private const val MAX_RECENTS = 48
 
     val DEFAULT_RECENTS = listOf(
         "😀", "😂", "🥰", "😍", "👍", "❤️", "🔥", "✨",
         "😊", "🙏", "🎉", "🤣", "😭", "🥺", "😎", "🙌"
     )
 
-    val SMILEYS = listOf(
-        "😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣",
-        "🥲", "🥹", "😊", "😇", "🙂", "🙃", "😉", "😌",
-        "😍", "🥰", "😘", "😗", "😙", "😚", "😋", "😛",
-        "😝", "😜", "🤪", "🤨", "🧐", "🤓", "😎", "🥸",
-        "🤩", "🥳", "😏", "😒", "😞", "😔", "😟", "😕",
-        "🙁", "☹️", "😣", "😖", "😫", "😩", "🥺", "😢",
-        "😭", "😤", "😠", "😡", "🤬", "🤯", "😳", "🥵",
-        "🥶", "😱", "😨", "😰", "😥", "😓", "🤗", "🤔",
-        "🫣", "🤭", "🤫", "🤥", "😶", "😐", "😑", "😬",
-        "🫠", "🙄", "😯", "😦", "😧", "😮", "😲", "🥱",
-        "😴", "🤤", "😪", "😵", "😵‍💫", "🤐", "🥴", "🤢",
-        "🤮", "🤧", "😷", "🤒", "🤕", "🤑", "🤠", "😈",
-        "👿", "👹", "👺", "🤡", "💩", "👻", "💀", "☠️",
-        "👽", "👾", "🤖", "🎃"
-    )
+    private val cachedCategories = mutableMapOf<String, List<String>>()
 
-    val PEOPLE = listOf(
-        "👋", "🤚", "🖐️", "✋", "🖖", "👌", "🤌", "🤏",
-        "✌️", "🤞", "🫰", "🤟", "🤘", "🤙", "👈", "👉",
-        "👆", "🖕", "👇", "☝️", "🫵", "👍", "👎", "✊",
-        "👊", "🤛", "🤜", "👏", "🙌", "🫶", "👐", "🤲",
-        "🤝", "🙏", "✍️", "💅", "🤳", "💪", "🦾", "🦿",
-        "🦵", "🦶", "👂", "🦻", "👃", "🧠", "🫀", "🫁",
-        "🦷", "🦴", "👀", "👁️", "👅", "👄", "🫦", "👶",
-        "🧒", "👦", "👧", "🧑", "👱", "👨", "🧔", "👩",
-        "🧓", "👴", "👵", "🙍", "🙎", "🙅", "🙆", "💁",
-        "🙋", "🧏", "🙇", "🤦", "🤷", "🧑‍⚕️", "👨‍⚕️", "👩‍⚕️"
-    )
-
-    val ANIMALS = listOf(
-        "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼",
-        "🐻‍❄️", "🐨", "🐯", "🦁", "🐮", "🐷", "🐽", "🐸",
-        "🐵", "🙈", "🙉", "🙊", "🐒", "🐔", "🐧", "🐦",
-        "🐤", "🐣", "🐥", "🦆", "🦅", "🦉", "🦇", "🐺",
-        "🐗", "🐴", "🦄", "🐝", "🪱", "🐛", "🦋", "🐌",
-        "🐞", "🐜", "🪰", "🪲", "🪳", "🦟", "🦗", "🕷️",
-        "🕸️", "🦂", "🐢", "🐍", "🦎", "🦖", "🦕", "🐙",
-        "🦑", "🦐", "🦞", "🦀", "🐡", "🐠", "🐟", "🐬",
-        "🐳", "🐋", "🦈", "🦭", "🐊", "🐅", "🐆", "🦓",
-        "🦍", "🦧", "🦣", "🐘", "🦛", "🦏", "🐪", "🐫",
-        "🦒", "🦘", "🦬", "🐃", "🐂", "🐄", "🐎", "🐖"
-    )
-
-    val FOOD = listOf(
-        "🍏", "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇",
-        "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥",
-        "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒", "🌶️",
-        "🫑", "🌽", "🥕", "🫒", "🧄", "🧅", "🥔", "🍠",
-        "🥐", "🥯", "🍞", "🥖", "🥨", "🧀", "🥚", "🍳",
-        "🧈", "🥞", "🧇", "🥓", "🥩", "🍗", "🍖", "🦴",
-        "🌭", "🍔", "🍟", "🍕", "🫓", "🥪", "🥙", "🧆",
-        "🌮", "🌯", "🫔", "🥗", "🥘", "🫕", "🍲", "🫙",
-        "🍜", "🍝", "🍠", "🍢", "🍣", "🍤", "🍥", "🥮",
-        "🍡", "🥟", "🥠", "🥡", "🍦", "🍧", "🍨", "🍩",
-        "🍪", "🎂", "🍰", "🧁", "🥧", "🍫", "🍬", "🍭"
-    )
-
-    val TRAVEL = listOf(
-        "🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑",
-        "🚒", "🚐", "🛻", "🚚", "🚛", "🚜", "🦯", "🦽",
-        "🦼", "🛴", "🚲", "🛵", "🏍️", "🛺", "🚨", "🚔",
-        "🚍", "🚘", "🚖", "🚡", "🚠", "🚟", "🚃", "🚋",
-        "🚞", "🚝", "🚄", "🚅", "🚈", "🚂", "🚆", "🚇",
-        "🚊", "🚉", "✈️", "🛫", "🛬", "🛩️", "💺", "🛰️",
-        "🚀", "🛸", "🚁", "🛶", "⛵", "🚤", "🛥️", "🛳️",
-        "⛴️", "🚢", "⚓", "🛟", "⛽", "🚧", "🚦", "🚥"
-    )
-
-    val ACTIVITIES = listOf(
-        "⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉",
-        "🥏", "🎱", "🪀", "🏓", "🏸", "🏒", "🏑", "🥍",
-        "🏏", "🪃", "🥅", "⛳", "🪁", "🏹", "🎣", "🤿",
-        "🥊", "🥋", "🎽", "🛹", "🛼", "🛷", "⛸️", "🥌",
-        "🎿", "⛷️", "🏂", "🪂", "🏋️", "🤼", "🤸", "🤺",
-        "🧗", "🤾", "🏌️", "🏇", "🧘", "🏄", "🏊", "🤽",
-        "🚣", "🧗", "🚵", "🚴", "🏆", "🥇", "🥈", "🥉"
-    )
-
-    val OBJECTS = listOf(
-        "⌚", "📱", "📲", "💻", "⌨️", "🖥️", "🖨️", "🖱️",
-        "🖲️", "🕹️", "🗜️", "💽", "💾", "💿", "📀", "📼",
-        "📷", "📸", "📹", "🎥", "📽️", "🎞️", "📞", "☎️",
-        "📟", "📠", "📺", "📻", "🎙️", "🎚️", "🎛️", "🧭",
-        "⏱️", "⏲️", "⏰", "🕰️", "⌛", "⏳", "📡", "🔋",
-        "🪫", "🔌", "💡", "🔦", "🕯️", "🪔", "🧯", "🛢️",
-        "💸", "💵", "💴", "💶", "💷", "🪙", "💰", "💳",
-        "💎", "⚖️", "🪜", "🧰", "🪛", "🔧", "🔨", "⚒️",
-        "🛠️", "⛏️", "🪚", "🔩", "⚙️", "🪤", "🧱", "⛓️"
-    )
-
-    val SYMBOLS = listOf(
-        "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍",
-        "🤎", "💔", "❣️", "💕", "💞", "💓", "💗", "💖",
-        "💘", "💝", "💟", "☮️", "✝️", "☪️", "🕉️", "☸️",
-        "✡️", "🔯", "🕎", "☯️", "☦️", "🛐", "⛎", "♈",
-        "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐",
-        "♑", "♒", "♓", "🆔", "⚛️", "🉑", "📴", "📳",
-        "🈶", "🈚", "🈸", "🈺", "🈷️", "✴️", "❇️", "©️",
-        "®️", "™️", "🔟", "💯", "🔠", "🔡", "🔢", "🔣"
-    )
-
-    val FLAGS = listOf(
-        "🏁", "🚩", "🎌", "🏴", "🏳️", "🏳️‍🌈", "🏳️‍⚧️", "🏴‍☠️",
-        "🇺🇸", "🇬🇧", "🇨🇦", "🇦🇺", "🇫🇷", "🇩🇪", "🇮🇹", "🇪🇸",
-        "🇯🇵", "🇰🇷", "🇨🇳", "🇮🇳", "🇧🇷", "🇲🇽", "🇷🇺", "🇿🇦"
-    )
+    private fun loadAssetEmojis(context: Context, filename: String): List<String> {
+        cachedCategories[filename]?.let { return it }
+        return try {
+            val list = context.assets.open("emoji/$filename").bufferedReader().useLines { lines ->
+                lines.mapNotNull { line ->
+                    val trimmed = line.trim()
+                    if (trimmed.isEmpty()) null
+                    else if (filename == "EMOTICONS.txt") trimmed
+                    else trimmed.split("\\s+".toRegex()).firstOrNull()
+                }.toList()
+            }
+            cachedCategories[filename] = list
+            list
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 
     fun getCategories(context: Context): List<EmojiCategory> {
         val recents = getRecentEmojis(context)
         return listOf(
-            EmojiCategory("recent", "Recent", R.drawable.ic_emoji_recent, recents),
-            EmojiCategory("smileys", "Smileys", R.drawable.ic_emoji_smileys, SMILEYS),
-            EmojiCategory("people", "People", R.drawable.ic_emoji_people, PEOPLE),
-            EmojiCategory("animals", "Animals", R.drawable.ic_emoji_food, ANIMALS),
-            EmojiCategory("food", "Food", R.drawable.ic_emoji_food, FOOD),
-            EmojiCategory("travel", "Travel", R.drawable.ic_emoji_travel, TRAVEL),
-            EmojiCategory("activities", "Activities", R.drawable.ic_emoji_activities, ACTIVITIES),
-            EmojiCategory("objects", "Objects", R.drawable.ic_emoji_objects, OBJECTS),
-            EmojiCategory("symbols", "Symbols", R.drawable.ic_emoji_symbols, SYMBOLS),
-            EmojiCategory("flags", "Flags", R.drawable.ic_emoji_flags, FLAGS)
+            EmojiCategory("recent", "Recent", R.drawable.ic_emoji_recents_rounded, recents),
+            EmojiCategory("smileys", "Smileys", R.drawable.ic_emoji_smileys_emotion_rounded, loadAssetEmojis(context, "SMILEYS_AND_EMOTION.txt")),
+            EmojiCategory("people", "People", R.drawable.ic_emoji_people_body_rounded, loadAssetEmojis(context, "PEOPLE_AND_BODY.txt")),
+            EmojiCategory("animals", "Animals", R.drawable.ic_emoji_animals_nature, loadAssetEmojis(context, "ANIMALS_AND_NATURE.txt")),
+            EmojiCategory("food", "Food", R.drawable.ic_emoji_food_drink_rounded, loadAssetEmojis(context, "FOOD_AND_DRINK.txt")),
+            EmojiCategory("travel", "Travel", R.drawable.ic_emoji_travel_places_rounded, loadAssetEmojis(context, "TRAVEL_AND_PLACES.txt")),
+            EmojiCategory("activities", "Activities", R.drawable.ic_emoji_activities_rounded, loadAssetEmojis(context, "ACTIVITIES.txt")),
+            EmojiCategory("objects", "Objects", R.drawable.ic_emoji_objects_rounded, loadAssetEmojis(context, "OBJECTS.txt")),
+            EmojiCategory("symbols", "Symbols", R.drawable.ic_emoji_symbols_rounded, loadAssetEmojis(context, "SYMBOLS.txt")),
+            EmojiCategory("flags", "Flags", R.drawable.ic_emoji_flags_rounded, loadAssetEmojis(context, "FLAGS.txt"))
         )
     }
 

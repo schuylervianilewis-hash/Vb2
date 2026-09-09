@@ -54,14 +54,6 @@ class VianClipboardModalView @JvmOverloads constructor(
             },
             onItemLongClick = { anchorView, text ->
                 showCardPopup(anchorView, text)
-            },
-            onPinToggle = { text ->
-                storage.togglePin(text)
-                refreshData()
-            },
-            onDelete = { text ->
-                storage.deleteClip(text)
-                refreshData()
             }
         )
         rvClipboardCards.adapter = adapter

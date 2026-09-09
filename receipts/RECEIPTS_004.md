@@ -111,4 +111,40 @@
 - **Deviation**: None. Executed exact scope finalized during discussion.
 - **Follow-up**: Repository is clean, verified, and ready for export to GitHub to run the next Actions build.
 
+---
+
+### Entry: 2026-09-09T14:02:00-07:00
+- **Summary**: Implemented HeliBoard architectural and visual parity overhaul: Universal navigation bar inset system, functional key coloring for Comma & Period, typography & key proportions, suggestion strip borders/dividers with 3-dot auto-correct indicator, complete HeliBoard emoji assets migration with non-scrolling 10-tab header, and simplified 4-line cards with on-demand compact long-press popups.
+- **Exact Files Touched**:
+  - `/app/src/main/java/com/example/ime/VianBoardService.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/VianKeyboardView.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/KeyboardLayout.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/KeyboardTheme.kt`
+  - `/app/src/main/java/com/example/ime/emoji/EmojiCategoryData.kt`
+  - `/app/src/main/java/com/example/ime/emoji/VianEmojiModalView.kt`
+  - `/app/src/main/res/layout/view_emoji_modal.xml`
+  - `/app/src/main/res/layout/item_emoji_tab_pill.xml`
+  - `/app/src/main/res/layout/item_clipboard_card.xml`
+  - `/app/src/main/res/layout/item_quick_note_card.xml`
+  - `/app/src/main/res/layout/view_card_longpress_popup.xml`
+  - `/app/src/main/java/com/example/ime/clipboard/ClipboardCardsAdapter.kt`
+  - `/app/src/main/java/com/example/ime/clipboard/VianClipboardModalView.kt`
+  - `/app/src/main/java/com/example/ime/quicknotes/QuickNotesCardsAdapter.kt`
+  - `/app/src/main/java/com/example/ime/quicknotes/VianQuickNotesModalView.kt`
+  - `/app/src/main/assets/emoji/` (10 emoji text databases from HeliBoard)
+  - `/app/src/main/res/drawable/` (HeliBoard vector drawables for categories, pin, edit, delete)
+  - `/BLUEPRINT.md`
+  - `/receipts/RECEIPTS_004.md`
+- **What was actually done**:
+  1. Universal Navigation Bar Inset System: Configured `VianBoardService` with `onConfigureWindow` edge-to-edge transparent navigation bar, `onComputeInsets` frame-level touchable region, and root `inputViewContainer` dynamic `ViewCompat.setOnApplyWindowInsetsListener` applying bottom navigation bar padding. Main keyboard layout and all on-demand modals (Clipboard, Quick Notes, Emoji) are permanently elevated above the system navigation bar with matching background continuity.
+  2. Functional Key Coloring: Updated `KeyboardTheme.isActionKey` to classify `KeyType.COMMA` and `KeyType.PERIOD` as functional action keys, painting their backgrounds with `actionKeyColor` (`#CFD8DC`) and labels with `actionKeyTextColor` (`#37474F`), matching Shift, Delete, ?123, and Enter.
+  3. Typography & Button Proportions: Upgraded `VianKeyboardView` paint typefaces to `sans-serif-medium` bold/medium, calibrated key corner radii (5dp), toolbar key spacing (3.5dp internal margin), and 18dp icon bounds to mirror HeliBoard's proportions.
+  4. Suggestion Strip Dividers & Auto-Correct Dots: Implemented candidate vertical dividers, top/bottom borders, and the authentic HeliBoard 3-dot auto-correct indicator beneath the active prediction candidate.
+  5. Emoji Library & Non-Scrolling Header: Migrated HeliBoard's complete set of 10 emoji asset files into `app/src/main/assets/emoji/`, implemented cached asset loading in `EmojiCategoryData`, replaced the horizontal scroll header with a fixed, evenly distributed 10-tab category strip (`layout_weight="1"`), and wired authentic category vector icons.
+  6. Simplified Cards & Compact Long-Press Popups: Stripped out inline action buttons from `item_clipboard_card.xml` and `item_quick_note_card.xml`. Cards now feature clean multiline layouts (up to 4 lines with end ellipsis dots), a discreet corner pin badge, immediate commit on tap, and an on-demand compact popup menu on long press with authentic HeliBoard vector icons for Pin/Unpin, Note transfer/Edit, and Delete.
+- **How it was verified**: Local build verified (`compile_applet` passed with zero errors).
+- **Deviation**: None. Executed user instructions with strict fidelity.
+- **Follow-up**: Verified clean build; ready for on-device testing.
+
+
 

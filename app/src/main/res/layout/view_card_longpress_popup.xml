@@ -24,7 +24,7 @@
             android:layout_width="18dp"
             android:layout_height="18dp"
             android:contentDescription="Pin"
-            android:src="@drawable/ic_pin" />
+            android:src="@drawable/ic_clipboard_pin_rounded" />
 
         <TextView
             android:id="@+id/tvPopupPinText"
@@ -81,7 +81,7 @@
             android:layout_width="18dp"
             android:layout_height="18dp"
             android:contentDescription="Delete"
-            android:src="@drawable/ic_close" />
+            android:src="@drawable/sym_keyboard_delete_rounded" />
 
         <TextView
             android:layout_width="wrap_content"
