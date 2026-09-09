@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#E8EAED"
+    android:orientation="vertical">
+
+    <!-- Speed Island Header / Editing Toolbar (replaces suggestion bar) -->
+    <LinearLayout
+        android:id="@+id/speedIslandBar"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="#E8EAED"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="6dp">
+
+        <!-- Cursor Navigation Arrows -->
+        <ImageButton
+            android:id="@+id/btnNavLeft"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Cursor Left"
+            android:scaleType="fitCenter"
+            android:padding="6dp"
+            android:src="@drawable/ic_arrow_left" />
+
+        <ImageButton
+            android:id="@+id/btnNavRight"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Cursor Right"
+            android:scaleType="fitCenter"
+            android:padding="6dp"
+            android:src="@drawable/ic_arrow_right" />
+
+        <ImageButton
+            android:id="@+id/btnNavUp"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Cursor Up"
+            android:scaleType="fitCenter"
+            android:padding="6dp"
+            android:src="@drawable/ic_arrow_up" />
+
+        <ImageButton
+            android:id="@+id/btnNavDown"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Cursor Down"
+            android:scaleType="fitCenter"
+            android:padding="6dp"
+            android:src="@drawable/ic_arrow_down" />
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="22dp"
+            android:layout_marginHorizontal="4dp"
+            android:background="#CBD5E1" />
+
+        <!-- Editing Tools -->
+        <ImageButton
+            android:id="@+id/btnSelectAll"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Select All"
+            android:scaleType="fitCenter"
+            android:padding="6dp"
+            android:src="@drawable/ic_select_all_rounded" />
+
+        <ImageButton
+            android:id="@+id/btnCut"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Cut"
+            android:scaleType="fitCenter"
+            android:padding="6dp"
+            android:src="@drawable/ic_cut" />
+
+        <ImageButton
+            android:id="@+id/btnCopy"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Copy"
+            android:scaleType="fitCenter"
+            android:padding="6dp"
+            android:src="@drawable/sym_keyboard_copy_rounded" />
+
+        <ImageButton
+            android:id="@+id/btnPaste"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Paste"
+            android:scaleType="fitCenter"
+            android:padding="6dp"
+            android:src="@drawable/ic_paste" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/btnClearAll"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Clear Unpinned"
+            android:scaleType="fitCenter"
+            android:padding="6dp"
+            android:src="@drawable/ic_delete_sweep" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#D1D5DB" />
+
+    <!-- History / Pinned Container Area -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="4dp">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvClipboardCards"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:scrollbars="vertical" />
+
+        <TextView
+            android:id="@+id/tvEmptyPlaceholder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:padding="16dp"
+            android:text="Clipboard history is empty\nCopied text will appear here"
+            android:textColor="#64748B"
+            android:textSize="14sp"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <!-- Unified 4-Button Modal Bottom Bar -->
+    <com.example.ime.modal.ModalBottomBarView
+        android:id="@+id/modalBottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>
