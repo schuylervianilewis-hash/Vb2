@@ -95,3 +95,20 @@
 - **Deviation**: None. Followed user choices ("Option b. Copy. Implement") strictly.
 - **Follow-up**: Ready for on-device manual QA testing.
 
+---
+
+### Entry: 2026-09-09T01:15:00-07:00
+- **Summary**: Audited and confirmed CI build failure cause #29 (resource merger collision between .png and .webp mipmap icons), verified workspace sanitation, and verified local compilation for release export.
+- **Exact Files Touched**:
+  - `/receipts/RECEIPTS_004.md`
+- **What was actually done**:
+  1. Audited CI failure logs: Confirmed that `.github/workflows/build_apk.yml` workflow file was not the cause of the failure. The workflow successfully provisioned JDK 17, Gradle 9.3.1, generated the ephemeral keystore, and executed `gradle :app:assembleDebug --no-daemon`.
+  2. Isolated root failure cause: Android Gradle Plugin resource merger threw `Duplicate resources` fatal errors because both `.png` and `.webp` versions of `ic_launcher` and `ic_launcher_round` were present in the remote repository's `mipmap-*` resource directories.
+  3. Verified workspace resource sanitation: Confirmed that in the current repository workspace, all duplicate `.png` files have been excised and only singular `.webp` and adaptive XML definitions exist across all mipmap density buckets (`mipmap-hdpi`, `mipmap-mdpi`, `mipmap-xhdpi`, `mipmap-xxhdpi`, `mipmap-xxxhdpi`, `mipmap-anydpi-v26`).
+  4. Executed Credential Immunity & Security Scan: Confirmed zero `.keystore`, `.jks`, `.p12`, or exposed keys in the workspace; confirmed `.gitignore` contains all sensitive and artifact patterns.
+  5. Verified compilation: Successfully executed `compile_applet` with zero errors.
+- **How it was verified**: local build verified (`compile_applet` passed with zero errors).
+- **Deviation**: None. Executed exact scope finalized during discussion.
+- **Follow-up**: Repository is clean, verified, and ready for export to GitHub to run the next Actions build.
+
+
