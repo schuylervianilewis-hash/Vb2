@@ -146,5 +146,46 @@
 - **Deviation**: None. Executed user instructions with strict fidelity.
 - **Follow-up**: Verified clean build; ready for on-device testing.
 
+---
+
+### Entry: 2026-09-10T03:34:30-07:00
+- **Summary**: Updated `.gitignore` to explicitly ignore the `vianboard/` reference repository directory (`vianboard/` and `/vianboard/`), preventing accidental commit or bloat upon export to GitHub.
+- **Exact Files Touched**:
+  - `/.gitignore`
+  - `/BLUEPRINT.md`
+  - `/receipts/RECEIPTS_004.md`
+- **What was actually done**: Added explicit root-level and recursive ignore rules for `vianboard/` in `/.gitignore` under `# HeliBoard reference repository`. The local reference workspace folder remains intact for inspection while excluded from git tracking.
+- **How it was verified**: Inspected `.gitignore` contents; local build verified (`compile_applet`).
+- **Deviation**: None. Executed exact scope requested by user.
+- **Follow-up**: Repository is clean and gitignored.
+
+---
+
+### Entry: 2026-09-10T09:54:00-07:00
+- **Summary**: Implemented uncolored solid black system navigation bar, slim 36dp toolbar strip with unified solid black icons, stadium pill modal bottom bar capsules, and top-left pin icon cards for Clipboard and Quick Notes.
+- **Exact Files Touched**:
+  - `/app/src/main/java/com/example/ime/VianBoardService.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/KeyboardTheme.kt`
+  - `/app/src/main/java/com/example/ime/keyboard/VianKeyboardView.kt`
+  - `/app/src/main/java/com/example/ime/modal/ModalBottomBarView.kt`
+  - `/app/src/main/java/com/example/ime/clipboard/ClipboardCardsAdapter.kt`
+  - `/app/src/main/java/com/example/ime/quicknotes/QuickNotesCardsAdapter.kt`
+  - `/app/src/main/res/layout/view_clipboard_modal.xml`
+  - `/app/src/main/res/layout/view_quick_notes_modal.xml`
+  - `/app/src/main/res/layout/item_clipboard_card.xml`
+  - `/app/src/main/res/layout/item_quick_note_card.xml`
+  - `/BLUEPRINT.md`
+  - `/receipts/RECEIPTS_004.md`
+- **What was actually done**:
+  1. System Navigation Bar: Changed `win.navigationBarColor` and root `inputViewContainer` background from `#ECEFF1` to `Color.BLACK`. Preserved full navigation bar inset height clearance while keeping the system bar area uncolored (solid black).
+  2. Slim Toolbar Strip: Reduced `toolbarHeightDp` from 40f to 36f, matching the clipboard speed island height. Scaled toolbar vector icons to 20dp and set toolbar icon paint and `toolbarTextPaint` strictly to solid `Color.BLACK`.
+  3. Modal Toolbar Consistency: Updated `view_clipboard_modal.xml` and `view_quick_notes_modal.xml` speed island bars to 36dp height and added `android:tint="#000000"` across all editing buttons and cursor arrows, unifying all toolbar glyphs to solid black.
+  4. Stadium Pill Modal Bottom Bar: Refactored `ModalBottomBarView.kt` button rendering to draw authentic rounded stadium pill capsules (`radius = rect.height() / 2f`) with soft white/slate surfaces and centered pure black glyphs/icons.
+  5. Top-Left Pin Badge Cards: Updated `item_clipboard_card.xml` and `item_quick_note_card.xml` to horizontal layouts positioning the pin icon badge at the top-left of the text with a slate tint (`#546E7A`). Unpinned cards hide the badge completely so the text spans the full card, matching the reference screenshot.
+  6. Verified Credential Immunity & Security Scan: Confirmed zero uncommitted keystores or credentials in repo tracking.
+- **How it was verified**: Local build verified (`compile_applet` completed with zero errors).
+- **Deviation**: None. Followed user prompt and visual reference screenshot with precision.
+- **Follow-up**: Ready for on-device manual QA testing.
+
 
 

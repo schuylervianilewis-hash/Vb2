@@ -21,7 +21,7 @@ data class KeyboardTheme(
     
     // Sliders
     val keyHeightDp: Float = 52f,
-    val toolbarHeightDp: Float = 40f,
+    val toolbarHeightDp: Float = 36f,
     val keyCornerRadiusDp: Float = 10f,
     val borderWidthDp: Float = 1f,                      // 1dp border by default matching HeliBoard
     val horizontalGapDp: Float = 4f,

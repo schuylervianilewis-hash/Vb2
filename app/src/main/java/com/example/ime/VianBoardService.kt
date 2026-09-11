@@ -81,7 +81,7 @@ class VianBoardService : InputMethodService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             win.setDecorFitsSystemWindows(false)
         }
-        win.navigationBarColor = Color.parseColor("#ECEFF1")
+        win.navigationBarColor = Color.BLACK
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             win.isNavigationBarContrastEnforced = false
         }
@@ -101,7 +101,7 @@ class VianBoardService : InputMethodService() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            setBackgroundColor(Color.parseColor("#ECEFF1"))
+            setBackgroundColor(Color.BLACK)
         }
 
         ViewCompat.setOnApplyWindowInsetsListener(container) { v, insets ->

@@ -55,6 +55,10 @@ class ModalBottomBarView @JvmOverloads constructor(
         typeface = Typeface.DEFAULT
     }
 
+    private val spaceStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+    }
+
     private var deleteIcon: Drawable? = null
     private var enterIcon: Drawable? = null
 
@@ -87,24 +91,28 @@ class ModalBottomBarView @JvmOverloads constructor(
     }
 
     private fun updatePaints() {
+        val density = resources.displayMetrics.density
         backgroundPaint.color = theme.backgroundColor
-        keyBgPaint.color = theme.keyBackgroundColor
-        actionKeyPaint.color = theme.actionKeyColor
+        keyBgPaint.color = 0xFFFFFFFF.toInt()
+        actionKeyPaint.color = 0xFFE2E8F0.toInt()
         enterKeyPaint.color = theme.enterKeyColor
         keyBevelPaint.color = theme.keyBottomBevelColor
         actionKeyBevelPaint.color = theme.actionKeyBevelColor
-        pressedPaint.color = theme.pressedKeyColor
+        pressedPaint.color = 0xFFCBD5E1.toInt()
 
-        textPaint.color = theme.textColor
-        textPaint.textSize = 15f * resources.displayMetrics.density
+        spaceStrokePaint.color = 0xFFCBD5E1.toInt()
+        spaceStrokePaint.strokeWidth = 1f * density
 
-        spaceTextPaint.color = theme.hintColor
-        spaceTextPaint.textSize = 13f * resources.displayMetrics.density
+        textPaint.color = Color.BLACK
+        textPaint.textSize = 15f * density
+
+        spaceTextPaint.color = 0xFF64748B.toInt()
+        spaceTextPaint.textSize = 13f * density
     }
 
     private fun loadIcons() {
         deleteIcon = ContextCompat.getDrawable(context, R.drawable.sym_keyboard_delete_rounded)?.mutate()
-        deleteIcon?.setTint(theme.textColor)
+        deleteIcon?.setTint(Color.BLACK)
 
         enterIcon = ContextCompat.getDrawable(context, R.drawable.sym_keyboard_return_rounded)?.mutate()
         enterIcon?.setTint(theme.enterTextColor)
@@ -133,8 +141,6 @@ class ModalBottomBarView @JvmOverloads constructor(
         val topY = vertGap
         val botY = topY + keyHeight
 
-        // ABC, Delete, and Enter each take 1.5x of standard column (roughly 14% of width each)
-        // Space takes the center remaining width
         val actionW = (availableW * 0.16f).coerceIn(48f * density, 80f * density)
         val spaceW = availableW - (actionW * 3f) - (horizGap * 3f)
 
@@ -160,21 +166,19 @@ class ModalBottomBarView @JvmOverloads constructor(
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), backgroundPaint)
 
         val density = resources.displayMetrics.density
-        val radius = theme.keyCornerRadiusDp * density
-        val bevelInset = 1.0f * density
 
-        // 1. Render [ ABC ]
-        drawKey(canvas, abcRect, actionKeyBevelPaint, actionKeyPaint, radius, bevelInset, pressedIndex == 0)
+        // 1. Render [ ABC ] stadium pill
+        drawPillKey(canvas, abcRect, actionKeyPaint, null, pressedIndex == 0)
         val abcBaseline = abcRect.centerY() - (textPaint.descent() + textPaint.ascent()) / 2f
         canvas.drawText("ABC", abcRect.centerX(), abcBaseline, textPaint)
 
-        // 2. Render [ Space ]
-        drawKey(canvas, spaceRect, keyBevelPaint, keyBgPaint, radius, bevelInset, pressedIndex == 1)
+        // 2. Render [ Space ] stadium pill
+        drawPillKey(canvas, spaceRect, keyBgPaint, spaceStrokePaint, pressedIndex == 1)
         val spaceBaseline = spaceRect.centerY() - (spaceTextPaint.descent() + spaceTextPaint.ascent()) / 2f
         canvas.drawText("VianBoard", spaceRect.centerX(), spaceBaseline, spaceTextPaint)
 
-        // 3. Render [ ⌫ Backspace ]
-        drawKey(canvas, deleteRect, actionKeyBevelPaint, actionKeyPaint, radius, bevelInset, pressedIndex == 2)
+        // 3. Render [ ⌫ Backspace ] stadium pill
+        drawPillKey(canvas, deleteRect, actionKeyPaint, null, pressedIndex == 2)
         deleteIcon?.let { icon ->
             val iconSize = (22f * density).toInt()
             val left = (deleteRect.centerX() - iconSize / 2f).toInt()
@@ -183,8 +187,8 @@ class ModalBottomBarView @JvmOverloads constructor(
             icon.draw(canvas)
         }
 
-        // 4. Render [ ↵ Enter ]
-        drawKey(canvas, enterRect, actionKeyBevelPaint, enterKeyPaint, radius, bevelInset, pressedIndex == 3)
+        // 4. Render [ ↵ Enter ] stadium pill
+        drawPillKey(canvas, enterRect, enterKeyPaint, null, pressedIndex == 3)
         enterIcon?.let { icon ->
             val iconSize = (22f * density).toInt()
             val left = (enterRect.centerX() - iconSize / 2f).toInt()
@@ -194,23 +198,21 @@ class ModalBottomBarView @JvmOverloads constructor(
         }
     }
 
-    private fun drawKey(
+    private fun drawPillKey(
         canvas: Canvas,
         rect: RectF,
-        bevelPaint: Paint,
         surfacePaint: Paint,
-        radius: Float,
-        bevelInset: Float,
+        strokePaint: Paint?,
         isPressed: Boolean
     ) {
+        val radius = rect.height() / 2f
         if (isPressed) {
             canvas.drawRoundRect(rect, radius, radius, pressedPaint)
         } else {
-            // Base layer: Bevel color covers full bounds
-            canvas.drawRoundRect(rect, radius, radius, bevelPaint)
-            // Top layer: inset bottom by 1dp exposing tactile bottom shadow
-            val topSurface = RectF(rect.left, rect.top, rect.right, rect.bottom - bevelInset)
-            canvas.drawRoundRect(topSurface, radius, radius, surfacePaint)
+            canvas.drawRoundRect(rect, radius, radius, surfacePaint)
+            strokePaint?.let {
+                canvas.drawRoundRect(rect, radius, radius, it)
+            }
         }
     }
 

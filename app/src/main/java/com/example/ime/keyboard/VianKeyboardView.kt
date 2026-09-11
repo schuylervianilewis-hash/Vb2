@@ -251,7 +251,7 @@ class VianKeyboardView @JvmOverloads constructor(
         hintPaint.color = theme.hintColor
         hintPaint.textSize = 10.5f * density
 
-        toolbarTextPaint.color = theme.textColor
+        toolbarTextPaint.color = Color.BLACK
         toolbarTextPaint.textSize = 14.5f * density
 
         iconStrokePaint.color = theme.textColor
@@ -327,10 +327,10 @@ class VianKeyboardView @JvmOverloads constructor(
                 val anchorRadius = anchorKey.bounds.height() / 2f
                 canvas.drawRoundRect(anchorKey.bounds, anchorRadius, anchorRadius, bgPaint)
                 if (layout.isIncognitoActive) {
-                    drawVectorIcon(canvas, anchorKey.bounds, R.drawable.sym_keyboard_incognito_lxx, 26f * density, theme.textColor)
+                    drawVectorIcon(canvas, anchorKey.bounds, R.drawable.sym_keyboard_incognito_lxx, 20f * density, Color.BLACK)
                 } else {
                     val chevronRes = if (layout.isToolbarExpanded) R.drawable.ic_chevron_left else R.drawable.ic_chevron_right
-                    drawVectorIcon(canvas, anchorKey.bounds, chevronRes, 26f * density, theme.textColor)
+                    drawVectorIcon(canvas, anchorKey.bounds, chevronRes, 20f * density, Color.BLACK)
                 }
             }
 
@@ -348,7 +348,7 @@ class VianKeyboardView @JvmOverloads constructor(
 
                 if (key.type == KeyType.TOOLBAR_TOOL) {
                     key.tool?.let { tool ->
-                        drawVectorIcon(canvas, key.bounds, tool.iconResId, 26f * density, theme.textColor)
+                        drawVectorIcon(canvas, key.bounds, tool.iconResId, 20f * density, Color.BLACK)
                     }
                 } else {
                     val textY = key.bounds.centerY() - ((toolbarTextPaint.descent() + toolbarTextPaint.ascent()) / 2)
@@ -366,7 +366,7 @@ class VianKeyboardView @JvmOverloads constructor(
                 }
                 if (key.type == KeyType.TOOLBAR_TOOL) {
                     key.tool?.let { tool ->
-                        drawVectorIcon(canvas, key.bounds, tool.iconResId, 26f * density, theme.textColor)
+                        drawVectorIcon(canvas, key.bounds, tool.iconResId, 20f * density, Color.BLACK)
                     }
                 }
             }
@@ -377,10 +377,10 @@ class VianKeyboardView @JvmOverloads constructor(
                     val anchorRadius = key.bounds.height() / 2f
                     canvas.drawRoundRect(key.bounds, anchorRadius, anchorRadius, bgPaint)
                     if (layout.isIncognitoActive) {
-                        drawVectorIcon(canvas, key.bounds, R.drawable.sym_keyboard_incognito_lxx, 26f * density, theme.textColor)
+                        drawVectorIcon(canvas, key.bounds, R.drawable.sym_keyboard_incognito_lxx, 20f * density, Color.BLACK)
                     } else {
                         val chevronRes = if (layout.isToolbarExpanded) R.drawable.ic_chevron_left else R.drawable.ic_chevron_right
-                        drawVectorIcon(canvas, key.bounds, chevronRes, 26f * density, theme.textColor)
+                        drawVectorIcon(canvas, key.bounds, chevronRes, 20f * density, Color.BLACK)
                     }
                 } else if (key.type == KeyType.TOOLBAR_TOOL) {
                     if (key.isPressed) {
@@ -388,7 +388,7 @@ class VianKeyboardView @JvmOverloads constructor(
                         canvas.drawRoundRect(key.bounds, toolRadius, toolRadius, pressedKeyPaint)
                     }
                     key.tool?.let { tool ->
-                        drawVectorIcon(canvas, key.bounds, tool.iconResId, 26f * density, theme.textColor)
+                        drawVectorIcon(canvas, key.bounds, tool.iconResId, 20f * density, Color.BLACK)
                     }
                 } else if (key.type == KeyType.SUGGESTION) {
                     val bgPaint = if (key.isPressed) pressedKeyPaint else toolbarBackgroundPaint

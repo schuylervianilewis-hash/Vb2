@@ -35,7 +35,7 @@ class ClipboardCardsAdapter(
         val isPinned = storage.isPinned(text)
         if (isPinned) {
             holder.ivPinBadge.visibility = View.VISIBLE
-            holder.ivPinBadge.setColorFilter(ContextCompat.getColor(holder.itemView.context, android.R.color.holo_blue_dark))
+            holder.ivPinBadge.setColorFilter(0xFF546E7A.toInt())
         } else {
             holder.ivPinBadge.visibility = View.GONE
         }

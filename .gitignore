@@ -27,4 +27,6 @@ debug.keystore
 .build-outputs/
 reference/
 Vianboardtryagain-main/
+# HeliBoard reference repository
 vianboard/
+/vianboard/

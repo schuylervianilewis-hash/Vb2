@@ -169,5 +169,7 @@
 | **Phase 2U** | On-Demand Clipboard & Emoji Modals with Speed Island, Category Pill Tabs Strip, and Unified 4-Button Modal Bottom Bar Component (`ModalBottomBarView`) | COMPLETED |
 | **Phase 2V** | Quick Notes On-Demand Modal (Separate Zero-Idle Storage, 2-Column Staggered Grid, Card Long-Press Compact Popups for Clipboard & Notes, Translucent Dialog Note Editing Activity, and Settings Transfer Mode) | COMPLETED |
 | **Phase 2W** | HeliBoard Full Parity Overhaul: Universal Navigation Bar Insets (`onComputeInsets` + Root Container Insets Padding), Comma/Period Action Key Coloring, Roboto Typography & HeliBoard Proportions, Suggestion Strip Dividers & 3-Dot Indicators, Full HeliBoard Emoji Library Migration with Non-Scrolling 10-Tab Header, Simple 4-Line Cards & Compact On-Demand Long-Press Popups | COMPLETED |
+| **Phase 2X** | Repository Protection: Explicitly gitignored `vianboard/` and `/vianboard/` reference directory, isolating full HeliBoard fork from commits/pushes | COMPLETED |
+| **Phase 2Y** | Visual Polish & Authentic Styling: Uncolored (Solid Black) System Nav Bar, Slim 36dp Toolbar Strip with Unified Solid Black Icons, Stadium Pill Modal Bottom Bar Capsules ([ABC], [Space], [⌫], [↵]), and Pinned Top-Left Badge Cards Layout | COMPLETED |
 
 

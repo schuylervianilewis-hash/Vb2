@@ -35,7 +35,7 @@ class QuickNotesCardsAdapter(
         val isPinned = storage.isPinned(text)
         if (isPinned) {
             holder.ivNotePinBadge.visibility = View.VISIBLE
-            holder.ivNotePinBadge.setColorFilter(ContextCompat.getColor(holder.itemView.context, android.R.color.holo_blue_dark))
+            holder.ivNotePinBadge.setColorFilter(0xFF546E7A.toInt())
         } else {
             holder.ivNotePinBadge.visibility = View.GONE
         }
