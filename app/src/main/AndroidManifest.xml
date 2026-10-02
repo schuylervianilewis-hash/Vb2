@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.READ_USER_DICTIONARY" />
+    <uses-permission android:name="android.permission.WRITE_USER_DICTIONARY" />
+
+    <application
+        android:name="com.example.VianApplication"
+        android:label="@string/english_ime_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:allowBackup="true"
+        android:defaultToDeviceProtectedStorage="true"
+        android:directBootAware="true"
+        android:enableOnBackInvokedCallback="true"
+        android:theme="@style/platformActivityTheme">
+
+        <!-- Primary IME Service -->
+        <service
+            android:name="com.example.ime.VianBoardService"
+            android:label="@string/english_ime_name"
+            android:permission="android.permission.BIND_INPUT_METHOD"
+            android:directBootAware="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/method_vian" />
+        </service>
+
+        <!-- Main Launcher / Setup Activity -->
+        <activity
+            android:name="com.example.MainActivity"
+            android:icon="@mipmap/ic_launcher"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- VianBoard Settings Activities -->
+        <activity
+            android:name="com.example.ime.setup.SetupWizardActivity"
+            android:label="Welcome to VianBoard"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true" />
+
+        <activity
+            android:name="com.example.ime.settings.SettingsActivity"
+            android:label="VianBoard Settings"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name="com.example.ime.settings.AppearanceActivity"
+            android:label="Appearance"
+            android:exported="false" />
+
+        <activity
+            android:name="com.example.ime.settings.MainLayoutCustomizationActivity"
+            android:label="Main Layout Customisation"
+            android:exported="false" />
+
+        <activity
+            android:name="com.example.ime.settings.AppearanceSettingsActivity"
+            android:label="Main Layout Customisation"
+            android:exported="false" />
+
+        <activity
+            android:name="com.example.ime.settings.LayoutCustomizationActivity"
+            android:label="Layout Customization"
+            android:exported="false" />
+
+        <activity
+            android:name="com.example.ime.settings.ToolbarSettingsActivity"
+            android:label="Toolbar Customization"
+            android:exported="false" />
+
+        <activity
+            android:name="com.example.ime.settings.QuickNotesSettingsActivity"
+            android:label="Quick Notes Settings"
+            android:exported="false" />
+
+        <activity
+            android:name="com.example.ime.settings.DesktopShortcutsSettingsActivity"
+            android:label="Desktop Shortcuts Settings"
+            android:exported="false" />
+
+        <activity
+            android:name="com.example.ime.settings.VoiceInputSettingsActivity"
+            android:label="Voice Input Settings"
+            android:exported="false" />
+
+        <activity
+            android:name="com.example.ime.settings.SecurityVaultSettingsActivity"
+            android:label="Security &amp; Privacy Vault"
+            android:exported="false" />
+
+        <activity
+            android:name="com.example.ime.settings.AdvancedSettingsActivity"
+            android:label="Advanced Settings"
+            android:exported="false" />
+
+        <activity
+            android:name="com.example.ime.settings.TextEngineSettingsActivity"
+            android:label="Text Engine"
+            android:exported="false" />
+
+        <activity
+            android:name="com.example.ime.settings.PersonalDictionarySettingsActivity"
+            android:label="Personal Dictionary"
+            android:exported="false" />
+
+        <activity
+            android:name="com.example.ime.settings.BackupRestoreSettingsActivity"
+            android:label="Backup &amp; Restore"
+            android:exported="false" />
+
+        <!-- Dialog Activities -->
+        <activity
+            android:name="com.example.ime.quicknotes.QuickNoteEditActivity"
+            android:theme="@style/TransparentActivityTheme"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <activity
+            android:name="com.example.ime.voice.VoicePermissionActivity"
+            android:theme="@style/TransparentActivityTheme"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:exported="false" />
+
+        <!-- Log Keeper Activity -->
+        <activity
+            android:name="com.example.logger.LogViewerActivity"
+            android:label="VianBoard Logs"
+            android:exported="false" />
+
+        <!-- File Provider for Log Sharing -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- Isolated multi-process voice input service -->
+        <service
+            android:name="com.example.ime.voice.VoiceInputService"
+            android:process=":voice"
+            android:exported="false" />
+    </application>
+
+    <queries>
+        <!-- To detect other IMEs -->
+        <intent>
+            <action android:name="android.view.InputMethod" />
+        </intent>
+        <intent>
+            <action android:name="*" />
+        </intent>
+    </queries>
+</manifest>
